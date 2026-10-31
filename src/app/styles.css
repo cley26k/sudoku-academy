@@ -628,3 +628,90 @@ details ul { padding-left: 20px; display: flex; flex-direction: column; gap: 6px
 .btn-ghost { border-color: var(--line-d); color: var(--blue-d); }
 :root[data-theme="dark"] .btn-ghost { color: var(--blue); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .btn-ghost { color: var(--blue); } }
+
+/* ---------- Accesorios de Tesela ---------- */
+.acc-a { fill: var(--blue); } .acc-ad { fill: var(--blue-d); } .acc-line { fill: none; stroke: #fff; stroke-width: 3; opacity: .4; stroke-linecap: round; }
+.acc-gold { fill: #ffc83d; stroke: #e3a500; stroke-width: 3; stroke-linejoin: round; } .acc-gem { fill: #ff5a5f; } .acc-gem2 { fill: #2fa8ff; }
+.acc-band { fill: none; stroke: #3b3f4f; stroke-width: 8; stroke-linecap: round; }
+.acc-glass { fill: rgba(255, 255, 255, .18); stroke: #2b2233; stroke-width: 4.5; } .acc-frame { fill: none; stroke: #2b2233; stroke-width: 4.5; stroke-linecap: round; }
+.acc-red { fill: #ff5a5f; } .acc-redd { fill: #e03a40; } .acc-stripe { stroke: #fff; stroke-width: 3; opacity: .5; stroke-linecap: round; }
+
+/* ---------- Juego: avisos ---------- */
+.toasts { position: fixed; top: calc(14px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); z-index: 300; display: flex; flex-direction: column; gap: 8px; width: min(420px, calc(100vw - 32px)); pointer-events: none; }
+.toast { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 2px solid var(--line); border-bottom-width: 5px; border-radius: 18px; padding: 12px 14px; animation: toastin .45s cubic-bezier(.3, 1.6, .5, 1); }
+.toast b { display: block; font-weight: 900; } .toast small { color: var(--ink-2); font-weight: 700; }
+.toast-ico { width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; color: #fff; background: var(--purple); box-shadow: 0 3px 0 var(--purple-d); flex: none; }
+.tone-gold .toast-ico { background: var(--yellow); box-shadow: 0 3px 0 var(--yellow-d); color: #7a5200; }
+.tone-silver .toast-ico { background: #b8c2d1; box-shadow: 0 3px 0 #8e99aa; }
+.tone-bronze .toast-ico { background: #d9925a; box-shadow: 0 3px 0 #b06a33; }
+.tone-level .toast-ico { background: var(--green); box-shadow: 0 3px 0 var(--green-d); }
+.tone-quest .toast-ico { background: var(--blue); box-shadow: 0 3px 0 var(--blue-d); }
+@keyframes toastin { from { transform: translateY(-30px) scale(.9); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* ---------- Nivel y gemas ---------- */
+.ts-level { gap: 6px; color: var(--green-d); }
+.ts-level small { font-weight: 800; color: var(--ink-2); }
+.lv-badge { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font-weight: 900; font-size: .9rem; color: var(--green-d);
+  background: radial-gradient(closest-side, var(--surface) 72%, transparent 74% 100%), conic-gradient(var(--green) var(--pct), var(--surface-3) 0); }
+.ts-gems { border: 0; background: none; color: var(--blue); padding: 0; font-weight: 900; font-size: 1.05rem; display: inline-flex; align-items: center; gap: 5px; }
+
+/* ---------- Misiones ---------- */
+.quests { gap: 10px; }
+.quest { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; }
+.q-ico { width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; background: var(--surface-3); color: var(--ink-3); }
+.quest.ok .q-ico { background: var(--green); color: #fff; }
+.q-body { display: flex; flex-direction: column; gap: 4px; font-weight: 800; font-size: .92rem; }
+.q-bar { display: flex; align-items: center; gap: 8px; } .q-bar small { color: var(--ink-3); font-weight: 800; min-width: 34px; }
+.q-gem { display: inline-flex; align-items: center; gap: 3px; color: var(--blue); font-weight: 900; font-size: .85rem; }
+.q-chest { display: flex; align-items: center; gap: 8px; font-size: .82rem; font-weight: 800; color: var(--ink-3); border-top: 2px dashed var(--line); padding-top: 10px; }
+.q-chest.open { color: var(--yellow-d); }
+
+/* ---------- Logros ---------- */
+.achs { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.ach { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px; background: var(--surface); border: 2px solid var(--line); border-bottom-width: 5px; border-radius: 18px; padding: 16px 10px 12px; }
+.ach b { font-weight: 900; } .ach > small { color: var(--ink-2); font-weight: 700; font-size: .78rem; min-height: 2.4em; }
+.ach-medal { width: 60px; height: 60px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-3); color: var(--ink-3); margin-bottom: 4px; }
+.ach.t1 .ach-medal { background: #d9925a; color: #fff; box-shadow: 0 4px 0 #b06a33; }
+.ach.t2 .ach-medal { background: #b8c2d1; color: #fff; box-shadow: 0 4px 0 #8e99aa; }
+.ach.t3 .ach-medal { background: var(--yellow); color: #7a5200; box-shadow: 0 4px 0 var(--yellow-d); animation: shine 2.4s ease-in-out infinite; }
+@keyframes shine { 50% { filter: brightness(1.15); } }
+.ach-prog { display: flex; align-items: center; gap: 6px; width: 100%; } .ach-prog small { font-weight: 800; color: var(--ink-3); font-size: .72rem; }
+.ach-gold { color: var(--yellow-d) !important; margin: 0 auto; }
+.ach-tier { font-size: .68rem; font-weight: 900; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); }
+
+/* ---------- Tienda ---------- */
+.shop { max-width: 860px !important; padding-bottom: 50px; }
+.shop-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.gem-big { display: inline-flex; align-items: center; gap: 6px; font-size: 1.6rem; font-weight: 900; color: var(--blue); background: var(--blue-s); border-radius: 16px; padding: 8px 16px; }
+.shop-preview { display: flex; justify-content: center; margin: 10px 0 18px; }
+.shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+.shop-item { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; background: var(--surface); border: 2px solid var(--line); border-bottom-width: 5px; border-radius: 18px; padding: 14px; }
+.shop-item.on { border-color: var(--purple); background: var(--purple-s); }
+.shop-item small { color: var(--ink-2); font-weight: 700; font-size: .8rem; flex: 1; }
+.si-art { height: 104px; display: grid; place-items: center; }
+.si-shield { display: grid; place-items: center; width: 80px; height: 80px; border-radius: 24px; background: var(--blue); color: #fff; box-shadow: 0 5px 0 var(--blue-d); }
+.si-shield b { font-size: .8rem; }
+
+/* ---------- Contrarreloj ---------- */
+.rush-intro { max-width: 520px !important; min-height: calc(100vh - 60px); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 14px; }
+.rush-hero { position: relative; }
+.rush-clock { position: absolute; right: -24px; top: 10px; width: 64px; height: 64px; border-radius: 50%; background: var(--orange); color: #fff; display: grid; place-items: center; box-shadow: 0 5px 0 var(--orange-d); animation: tick 1s steps(2) infinite; }
+@keyframes tick { 50% { transform: rotate(10deg); } }
+.rush-rules { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.rush-rules span { display: inline-flex; align-items: center; gap: 6px; background: var(--surface-2); border: 2px solid var(--line); border-radius: 14px; padding: 8px 12px; font-weight: 800; }
+.rush-best { display: inline-flex; align-items: center; gap: 6px; color: var(--yellow-d); font-weight: 800; }
+.rush-bar { display: flex; align-items: center; gap: 14px; max-width: 1000px; width: 100%; margin: 0 auto 14px; }
+.rush-time { position: relative; flex: 1; height: 26px; border-radius: 13px; background: var(--surface-3); overflow: hidden; }
+.rush-time span { position: absolute; inset: 0 auto 0 0; background: var(--orange); border-radius: 13px; transition: width 1s linear; }
+.rush-time.low span { background: var(--red); animation: shine .5s ease-in-out infinite; }
+.rush-time b { position: relative; display: block; text-align: center; line-height: 26px; font-weight: 900; color: var(--ink); font-variant-numeric: tabular-nums; }
+.rush-lives { display: flex; gap: 2px; color: var(--surface-3); } .rush-lives .on { color: var(--red); }
+.rush-lives span:not(.on) { animation: lose .4s ease; }
+@keyframes lose { 40% { transform: scale(1.4); } }
+.rush-score { display: inline-flex; align-items: center; gap: 4px; font-weight: 900; font-size: 1.2rem; color: var(--green-d); animation: popbig .35s cubic-bezier(.3, 1.8, .5, 1); }
+.rush-cta { margin-bottom: 18px; }
+
+/* ---------- Combo ---------- */
+.combo { display: inline-flex; align-items: center; gap: 3px; font-weight: 900; color: #fff; background: var(--orange); box-shadow: 0 3px 0 var(--orange-d); border-radius: 12px; padding: 4px 10px; animation: popbig .4s cubic-bezier(.3, 1.8, .5, 1); }
+.combo small { font-size: .7rem; margin-left: 4px; opacity: .9; }
+@media (max-width: 600px) { .toast { padding: 8px 10px; gap: 10px; border-bottom-width: 4px; } .toast-ico { width: 36px; height: 36px; } .toast small { font-size: .74rem; } .toasts .toast:nth-last-child(n+3) { display: none; } }

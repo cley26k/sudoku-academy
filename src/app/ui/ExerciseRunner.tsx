@@ -20,6 +20,7 @@ export interface RunnerProps {
   ex: LiveExercise; task: Task; hints: boolean; showCands?: boolean;
   intro?: React.ReactNode; title?: string;
   onResult?: (r: RunResult) => void;
+  onWrong?: () => void;
   onNext?: () => void; nextLabel?: string;
   header?: React.ReactNode;
 }
@@ -59,7 +60,7 @@ export function ExerciseRunner(p: RunnerProps) {
   function onFeedback(f: Feedback) {
     setFb(f);
     sfx(f.status === 'correct' ? 'correct' : f.status === 'wrong' ? 'wrong' : f.status === 'empty' ? 'tap' : 'partial');
-    if (f.status === 'wrong') { setErrors(e => e + 1); if (!firstErr.current) firstErr.current = f.lines.find(l => l.kind === 'error')?.text ?? f.title; }
+    if (f.status === 'wrong') { p.onWrong?.(); setErrors(e => e + 1); if (!firstErr.current) firstErr.current = f.lines.find(l => l.kind === 'error')?.text ?? f.title; }
     if (f.status === 'correct') { const st = f.matched ?? ex.steps[0]; setDone(st); celebrate(); report(true, hint, st.variant); }
   }
   function check() {

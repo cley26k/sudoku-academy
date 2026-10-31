@@ -38,6 +38,14 @@ export const I = {
   music: 'M9 18V6l11-2v12M9 18a3 3 0 1 1-3-3 3 3 0 0 1 3 3zM20 16a3 3 0 1 1-3-3 3 3 0 0 1 3 3z',
   dumbbell: 'M6 7v10M3 9v6M18 7v10M21 9v6M6 12h12',
   trophy: 'M8 4h8v5a4 4 0 0 1-8 0zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 21h8M9 17h6v4H9z',
+  gem: 'M6 3h12l4 6-10 12L2 9zM2 9h20M9 3l3 6 3-6M12 9v12',
+  bolt: 'M13 2L4 14h7l-1 8 9-12h-7z',
+  clock: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3 2',
+  shield: 'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z',
+  heart: 'M12 20s-7-4.5-9-9a5 5 0 0 1 9-3 5 5 0 0 1 9 3c-2 4.5-9 9-9 9z',
+  chest: 'M3 10h18v10H3zM3 10a9 4 0 0 1 18 0M10 13h4v3h-4z',
+  shop: 'M4 8h16l-1 12H5zM8 8V6a4 4 0 0 1 8 0v2',
+  medal: 'M8 3l4 6 4-6M12 21a6 6 0 1 0 0-12 6 6 0 0 0 0 12zM12 13v4',
   help: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6M12 17h.01',
 };
 export function Icon({ d, size = 20, title, stroke = 2 }: { d: string; size?: number; title?: string; stroke?: number }) {

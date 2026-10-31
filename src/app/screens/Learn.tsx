@@ -8,6 +8,7 @@ import { Board } from '../ui/Board';
 import { UnitArt, Chest } from '../ui/art';
 import { lessonExercise } from '../bank';
 import { Friend, FRIEND_BY_UNIT } from '../ui/friends';
+import { LevelGems, QuestsCard } from '../ui/game';
 import { sfx } from '../sound';
 
 type NodeKind = 'locked' | 'open' | 'done' | 'mastered' | 'pending';
@@ -26,7 +27,7 @@ export function TopStats() {
   return (
     <div className="topstats">
       {p.settings.streaks && <span className="ts ts-flame" title="Días seguidos"><Icon d={I.flame} size={22} stroke={2.4} /><b>{streak(p)}</b></span>}
-      <span className="ts ts-xp" title="XP total"><Icon d={I.star} size={22} stroke={2.4} /><b>{xpTotal(p)}</b></span>
+      <LevelGems compact />
     </div>
   );
 }
@@ -134,13 +135,15 @@ export function Home() {
       </section>
       <aside className="home-side">
         <div className="side-top"><TopStats /></div>
-        <div className="card">
-          <div className="card-head"><h3>Meta diaria</h3></div>
-          <div className="goal"><Icon d={I.target} size={34} /><div><Meter value={(100 * xp) / DAILY_GOAL} tone="yellow" /><span className="muted small">{Math.min(xp, DAILY_GOAL)} / {DAILY_GOAL} XP</span></div></div>
-        </div>
+        <QuestsCard />
         <button className="card card-cta c-purple" onClick={() => go('sudoku-diario')}>
           <Icon d={I.calendar} size={30} />
           <span><b>Reto diario</b><small>{p.daily[today]?.done ? '¡Hecho hoy!' : 'Un sudoku nuevo cada día'}</small></span>
+          <Icon d={I.arrow} />
+        </button>
+        <button className="card card-cta c-orange" onClick={() => go('contrarreloj')}>
+          <Icon d={I.clock} size={30} />
+          <span><b>Contrarreloj</b><small>Récord: {p.rushBest ?? 0}</small></span>
           <Icon d={I.arrow} />
         </button>
         <button className="card card-cta c-blue" onClick={() => go('entrenar')}>

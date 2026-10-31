@@ -10,6 +10,9 @@ import { ProgressPage, ReviewPage } from './screens/Stats';
 import { SHEET_BY_ID, READY } from '../content/catalog';
 import { UnitTest } from './screens/Play';
 import { Welcome, Placement } from './screens/Welcome';
+import { Rush } from './screens/Rush';
+import { ToastLayer, Shop } from './ui/game';
+import { checkRewards, toast, applyStreakFreeze } from './gamify';
 import { I, Icon, ConfettiLayer } from './ui/common';
 import { useProgress, update, getProgress } from './store';
 import { Tesela } from './ui/Tutor';
@@ -47,6 +50,8 @@ function Screen({ route }: { route: string }) {
   switch (route) {
     case 'inicio': { const p = getProgress(); if (!p.welcomed && !Object.keys(p.lessons).length && !p.attempts.length) return <Welcome />; return <Home />; }
     case 'nivel': return <Placement />;
+    case 'contrarreloj': return <Rush />;
+    case 'tienda': return <Shop />;
     case 'biblioteca': return <Library />;
     case 'entrenar': return <Train key="free" />;
     case 'sudoku': return <Play key="free" />;
@@ -60,7 +65,9 @@ function Screen({ route }: { route: string }) {
 function App() {
   const route = useRoute();
   const p = useProgress();
-  const focus = route.startsWith('leccion-') || route === 'nivel';
+  const focus = route.startsWith('leccion-') || route === 'nivel' || route === 'contrarreloj';
+  useEffect(() => { applyStreakFreeze(); }, []);
+  useEffect(() => { const t = window.setTimeout(() => checkRewards(p).forEach((x, i) => window.setTimeout(() => toast(x), i * 900)), 700); return () => window.clearTimeout(t); }, [p.attempts.length, Object.keys(p.lessons).length, p.fullSolved, p.chests.length, p.rushBest]);
   const section = route.startsWith('tecnica-') ? 'biblioteca' : route.startsWith('entrenar') ? 'entrenar' : route.startsWith('sudoku') ? 'sudoku' : route;
   useEffect(() => {
     const t = p.settings.theme;
@@ -71,6 +78,7 @@ function App() {
   return (
     <div className={`shell${focus ? ' focus' : ''}`}>
       <ConfettiLayer />
+      <ToastLayer />
       {!focus && (
         <nav className="rail" aria-label="Principal">
           <button className="brand" onClick={() => go('inicio')} aria-label="Sudoku Academy, inicio">

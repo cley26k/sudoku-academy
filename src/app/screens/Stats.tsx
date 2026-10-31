@@ -8,6 +8,8 @@ import { go } from '../router';
 import { Tesela } from '../ui/Tutor';
 import { LessonTop } from '../ui/layout';
 import { setMusic } from '../sound';
+import { AchievementsGrid } from '../ui/game';
+import { levelOf } from '../gamify';
 
 function Bars({ data, labels }: { data: (number | null)[]; labels: string[] }) {
   return (
@@ -35,11 +37,13 @@ export function ProgressPage() {
       {!storageAvailable() && <div className="notice">Este navegador no guarda datos. Usa «Exportar» en Ajustes.</div>}
       <div className="stat-tiles big">
         <div className="st st-orange"><Icon d={I.flame} size={26} /><b>{streak(p)}</b><span>Racha</span></div>
-        <div className="st st-yellow"><Icon d={I.star} size={26} /><b>{xpTotal(p)}</b><span>XP</span></div>
+        <div className="st st-yellow"><Icon d={I.star} size={26} /><b>{levelOf(xpTotal(p)).level}</b><span>Nivel · {xpTotal(p)} XP</span></div>
         <div className="st st-blue"><Icon d={I.target} size={26} /><b>{scored.length}</b><span>Ejercicios</span></div>
         <div className="st st-purple"><Icon d={I.grid} size={26} /><b>{p.fullSolved}</b><span>Sudokus</span></div>
       </div>
       <div className="card"><div className="card-head"><h3>Últimos 14 días</h3><span className="muted small">aciertos sin pistas</span></div><Bars data={daily} labels={days} /></div>
+      <h2 className="h-sub">Logros</h2>
+      <AchievementsGrid />
       <h2 className="h-sub">Técnicas</h2>
       <div className="mlist">
         {rows.map(({ s, m }) => (

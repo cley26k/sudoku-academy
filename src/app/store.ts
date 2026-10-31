@@ -18,14 +18,28 @@ export interface Progress {
   fullSolved: number;
   chests: number[];
   welcomed?: boolean;
+  // ---- Juego ----
+  gems: number;
+  owned: string[];
+  equipped: { hat?: string; face?: string; neck?: string };
+  quests: Record<string, string[]>;        // día → misiones cobradas
+  achievements: Record<string, number>;    // logro → nivel cobrado
+  levelSeen: number;
+  rushBest: number;
+  rushDays: string[];
+  freezes: number;
+  freezeDays: string[];
+  bonusXp: Record<string, number>;         // día → XP extra (combos, misiones)
+  combo: { day: string; best: number };
+  bestStreak: number;
 }
 const KEY = 'sudoku-academy/v1';
-const fresh = (): Progress => ({ v: 1, lessons: {}, attempts: [], mistakes: [], sessions: [], daily: {}, settings: { streaks: true, theme: 'system', sound: true, music: false }, fullSolved: 0, chests: [] });
+const fresh = (): Progress => ({ v: 1, lessons: {}, attempts: [], mistakes: [], sessions: [], daily: {}, settings: { streaks: true, theme: 'system', sound: true, music: false }, fullSolved: 0, chests: [], gems: 0, owned: [], equipped: {}, quests: {}, achievements: {}, levelSeen: 1, rushBest: 0, rushDays: [], freezes: 0, freezeDays: [], bonusXp: {}, combo: { day: '', best: 0 }, bestStreak: 0 });
 
 function load(): Progress {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) { const p = JSON.parse(raw); if (p && p.v === 1) return { ...fresh(), ...p, settings: { ...fresh().settings, ...p.settings } }; }
+    if (raw) { const p = JSON.parse(raw); if (p && p.v === 1) return { ...fresh(), ...p, settings: { ...fresh().settings, ...p.settings }, equipped: p.equipped ?? {}, combo: p.combo ?? { day: '', best: 0 } }; }
   } catch { /* almacenamiento no disponible */ }
   return fresh();
 }
@@ -114,7 +128,7 @@ export function nextLesson(p: Progress): string | null {
   return order.find(id => !p.lessons[id]?.done && lessonUnlocked(p, id)) ?? null;
 }
 export function streak(p: Progress): number {
-  const days = new Set(p.attempts.map(a => dayKey(a.t)));
+  const days = new Set([...p.attempts.map(a => dayKey(a.t)), ...(p.freezeDays ?? [])]);
   let n = 0; const d = new Date();
   if (!days.has(dayKey(d.getTime()))) d.setDate(d.getDate() - 1);
   while (days.has(dayKey(d.getTime()))) { n++; d.setDate(d.getDate() - 1); }
@@ -134,10 +148,10 @@ export const DAILY_GOAL = 50;
 export const xpFor = (a: Attempt) => (!a.ok ? 0 : a.kind === 'full' ? 30 : a.hints ? 5 : 10);
 export function xpToday(p: Progress): number {
   const today = dayKey(Date.now());
-  return p.attempts.filter(a => dayKey(a.t) === today).reduce((s, a) => s + xpFor(a), 0)
+  return (p.bonusXp?.[today] ?? 0) + p.attempts.filter(a => dayKey(a.t) === today).reduce((s, a) => s + xpFor(a), 0)
     + Object.values(p.lessons).filter(l => l.done && dayKey(l.t) === today).length * 20;
 }
 export function xpTotal(p: Progress): number {
-  return p.attempts.reduce((s, a) => s + xpFor(a), 0) + Object.values(p.lessons).filter(l => l.done).length * 20 + p.chests.length * 25;
+  return p.attempts.reduce((s, a) => s + xpFor(a), 0) + Object.values(p.lessons).filter(l => l.done).length * 20 + p.chests.length * 25 + Object.values(p.bonusXp ?? {}).reduce((a, b) => a + b, 0);
 }
 export function claimChest(unit: number) { update(p => { if (!p.chests.includes(unit)) p.chests.push(unit); }); }

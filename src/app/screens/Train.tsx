@@ -10,6 +10,7 @@ import { Tesela } from '../ui/Tutor';
 import { recordAttempt, update } from '../store';
 import { stateFromValues } from '../../engine/grid';
 import { go } from '../router';
+import { comboHit } from '../gamify';
 
 interface Cfg { techs: TechId[]; task: Task; difficulty: 0 | 1 | 2 | 3; cands: boolean; hints: boolean; length: 'short' | 'full' }
 const CFG_KEY = 'sudoku-academy/train-cfg';
@@ -26,6 +27,7 @@ export function Train({ preset, presetTechs }: { preset?: TechId; presetTechs?: 
   const [reason, setReason] = useState<string | null>(null);
   const [stats, setStats] = useState({ n: 0, ok: 0 });
   const [nonce, setNonce] = useState(0);
+  const [combo, setCombo] = useState(0);
   const recent = useRef(new Set<number>());
   useEffect(() => { try { localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); } catch { /* noop */ } }, [cfg]);
   useEffect(() => { if (preset) { setCfg(c => ({ ...c, techs: [preset], length: 'short' })); setRunning(true); } }, [preset]);
@@ -52,6 +54,7 @@ export function Train({ preset, presetTechs }: { preset?: TechId; presetTechs?: 
   if (!running) return (
     <div className="train-cfg">
       <div className="tc-head"><Tesela mood="point" size={84} /><h1>¿Qué quieres practicar?</h1></div>
+      <button className="card card-cta c-orange rush-cta" onClick={() => go('contrarreloj')}><Icon d={I.clock} size={30} /><span><b>Contrarreloj</b><small>3 minutos, 3 vidas. ¿Cuántos resuelves?</small></span><Icon d={I.arrow} /></button>
       {UNITS_MAP.map(u => {
         const ts = READY.filter(s => s.unit === u.n);
         if (!ts.length) return null;
@@ -86,6 +89,7 @@ export function Train({ preset, presetTechs }: { preset?: TechId; presetTechs?: 
     <div className="train-bar">
       <button className="ltop-x" onClick={() => setRunning(false)} aria-label="Cambiar práctica"><Icon d={I.gear} size={22} /></button>
       <div className="tb-techs">{cfg.techs.map(t => <span key={t} className="chip">{sheetForTech(t).name}</span>)}</div>
+      {combo >= 2 && <div className="combo" key={combo} aria-label={`Combo de ${combo}`}><Icon d={I.flame} size={18} stroke={2.6} />x{combo}{combo >= 3 && <small>+5 XP</small>}</div>}
       <div className="tb-score" aria-label="Sesión"><Icon d={I.check} size={18} stroke={3} /><b>{stats.ok}</b><span className="muted">/ {stats.n}</span></div>
     </div>
   );
@@ -98,6 +102,7 @@ export function Train({ preset, presetTechs }: { preset?: TechId; presetTechs?: 
           title={cfg.techs.length > 1 ? '¿Qué técnica ves?' : undefined}
           onResult={r => {
             setStats(s => ({ n: s.n + 1, ok: s.ok + (r.ok ? 1 : 0) }));
+            setCombo(comboHit(r.ok, r.hints));
             recordAttempt({ tech: ex.tech, kind: cfg.task, ok: r.ok, hints: r.hints, errors: r.errors, ms: r.ms, variant: r.variant, exId: ex.id }, r.ok ? undefined : r.note);
           }}
           onNext={next} />

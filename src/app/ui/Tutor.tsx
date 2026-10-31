@@ -1,4 +1,5 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
+import { useProgress } from '../store';
 
 export type Mood = 'idle' | 'think' | 'happy' | 'oops' | 'wow' | 'point';
 
@@ -19,8 +20,24 @@ function Arm({ x, y, angle, hand = 'round', len = 30 }: { x: number; y: number; 
 }
 
 /** Tesela: una casilla de sudoku con vida propia (personaje original). */
-export function Tesela({ mood = 'idle', size = 84, talking = false }: { mood?: Mood; size?: number; talking?: boolean }) {
+type Wear = { hat?: string; face?: string; neck?: string };
+const HATS: Record<string, React.ReactNode> = {
+  gorra: <g><path d="M26 32 Q26 2 70 2 Q114 2 114 32 Z" className="acc-a" /><path d="M66 28 Q118 22 132 34 Q100 38 66 34 Z" className="acc-ad" /><circle cx="70" cy="4" r="4" className="acc-ad" /><path d="M40 14 Q70 6 100 14" className="acc-line" /></g>,
+  corona: <g><path d="M36 24 L42 0 L56 14 L70 -4 L84 14 L98 0 L104 24 Z" className="acc-gold" /><circle cx="70" cy="14" r="4" className="acc-gem" /><circle cx="50" cy="18" r="3" className="acc-gem2" /><circle cx="90" cy="18" r="3" className="acc-gem2" /></g>,
+  auriculares: <g><path d="M24 52 Q22 0 70 0 Q118 0 116 52" className="acc-band" /><rect x="10" y="40" width="20" height="32" rx="9" className="acc-a" /><rect x="110" y="40" width="20" height="32" rx="9" className="acc-a" /></g>,
+};
+const FACES: Record<string, React.ReactNode> = {
+  gafas: <g><circle cx="49" cy="50" r="17" className="acc-glass" /><circle cx="91" cy="50" r="17" className="acc-glass" /><path d="M66 48 Q70 44 74 48" className="acc-frame" /><path d="M32 46 L22 42 M108 46 L118 42" className="acc-frame" /></g>,
+};
+const NECKS: Record<string, React.ReactNode> = {
+  bufanda: <g><rect x="34" y="86" width="72" height="14" rx="7" className="acc-red" /><rect x="82" y="92" width="14" height="28" rx="6" className="acc-redd" transform="rotate(-10 89 92)" /><path d="M44 90 L44 97 M56 90 L56 97 M68 90 L68 97" className="acc-stripe" /></g>,
+  pajarita: <g><path d="M70 96 L52 86 L52 106 Z M70 96 L88 86 L88 106 Z" className="acc-a" /><circle cx="70" cy="96" r="5" className="acc-ad" /></g>,
+};
+
+export function Tesela({ mood = 'idle', size = 84, talking = false, wear }: { mood?: Mood; size?: number; talking?: boolean; wear?: Wear }) {
   const id = useId().replace(/:/g, '');
+  const prog = useProgress();
+  const eq: Wear = wear ?? prog.equipped ?? {};
   const [la, ra] = ARMS[mood];
   const [lx, ly] = LOOK[mood];
   const closedEyes = mood === 'happy';
@@ -83,7 +100,10 @@ export function Tesela({ mood = 'idle', size = 84, talking = false }: { mood?: M
           <path d={brows[mood][1]} className="tm-brow" />
           <g className="tm-mouth-closed">{mouth(false)}</g>
           <g className="tm-mouth-open">{mouth(true)}</g>
+          {eq.face && FACES[eq.face]}
+          {eq.hat && HATS[eq.hat]}
         </g>
+        {eq.neck && NECKS[eq.neck]}
         <Arm x={42} y={96} angle={la} len={mood === 'happy' || mood === 'wow' ? 38 : 30} />
         <Arm x={98} y={96} angle={ra} hand={mood === 'point' ? 'finger' : 'round'} len={mood === 'happy' || mood === 'wow' ? 38 : 30} />
         {mood === 'think' && <g className="tm-dots"><circle cx="118" cy="22" r="4" /><circle cx="128" cy="10" r="6" /></g>}
