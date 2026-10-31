@@ -3,6 +3,8 @@ import { useProgress, xpTotal, streak, activeDays, dayKey } from '../store';
 import { levelOf, dailyQuests, ACHIEVEMENTS, tierOf, TIER_NAME, Toast, SHOP, buy, equip, QUEST_GEMS, Moment, moment, dailyChestState, openDailyChest, weekDays, weekXp, bestWeek, ALL_QUESTS_BONUS } from '../gamify';
 import { Icon, I, Btn, Meter, prefersReducedMotion, celebrate } from './common';
 import { Chest } from './art';
+import { TierBadge } from '../screens/League';
+import { TIERS } from '../online';
 import { Tesela } from './Tutor';
 import { sfx } from '../sound';
 import { go } from '../router';
@@ -219,6 +221,11 @@ export function MomentLayer({ paused }: { paused: boolean }) {
           <div className="mo-chest"><Chest open /></div>
           <h1 id="moment-t">Cofre del día</h1>
           <p className="mo-gems big"><Icon d={I.gem} size={28} stroke={2.4} />+<CountUp to={m.n} delay={500} /></p>
+        </>}
+        {m.kind === 'league' && <>
+          <div className={`mo-tier${m.up === 1 ? ' up' : ' down'}`}><TierBadge tier={m.n} size={150} /></div>
+          <h1 id="moment-t">{m.up === 1 ? `¡Subiste a Liga ${TIERS[m.n].name}!` : `Bajas a Liga ${TIERS[m.n].name}`}</h1>
+          <p>{m.up === 1 ? `Terminaste ${m.rank}º la semana pasada.` : 'Una semana floja le pasa a cualquiera. ¡A por la revancha!'}</p>
         </>}
         {m.kind === 'unit' && <>
           <div className="mo-level unit"><Icon d={I.crown} size={64} stroke={2} /></div>

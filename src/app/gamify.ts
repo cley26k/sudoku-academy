@@ -144,7 +144,7 @@ export const resetCombo = () => { combo = 0; };
 export const comboNow = () => combo;
 
 // ---------- Momentos grandes (pantalla completa, sobrios) ----------
-export interface Moment { kind: 'level' | 'streak' | 'chest' | 'unit'; n: number }
+export interface Moment { kind: 'level' | 'streak' | 'chest' | 'unit' | 'league'; n: number; up?: number; rank?: number }
 export function moment(m: Moment) { try { window.dispatchEvent(new CustomEvent('sa-moment', { detail: m })); } catch { /* noop */ } }
 
 // ---------- Cofre diario ----------

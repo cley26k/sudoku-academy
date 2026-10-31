@@ -11,10 +11,12 @@ import { SHEET_BY_ID, READY } from '../content/catalog';
 import { UnitTest } from './screens/Play';
 import { Welcome, Placement } from './screens/Welcome';
 import { Rush } from './screens/Rush';
+import { League } from './screens/League';
+import { sync, onlineEnabled } from './online';
 import { ToastLayer, Shop, MomentLayer } from './ui/game';
 import { checkRewards, toast, applyStreakFreeze, Toast } from './gamify';
 import { I, Icon, ConfettiLayer } from './ui/common';
-import { useProgress, update, getProgress } from './store';
+import { useProgress, update, getProgress, xpTotal } from './store';
 import { Tesela } from './ui/Tutor';
 import type { TechId } from '../engine/step';
 import { TECH_BY_ID } from '../engine/techniques';
@@ -34,6 +36,7 @@ const NAV = [
   { r: 'biblioteca', label: 'Técnicas', icon: I.book, c: 'blue' },
   { r: 'entrenar', label: 'Entrenar', icon: I.target, c: 'red' },
   { r: 'sudoku', label: 'Sudoku', icon: I.grid, c: 'purple' },
+  { r: 'liga', label: 'Liga', icon: I.trophy, c: 'teal' },
   { r: 'progreso', label: 'Progreso', icon: I.chart, c: 'orange' },
   { r: 'revision', label: 'Errores', icon: I.rewind, c: 'pink' },
 ];
@@ -60,6 +63,7 @@ function Screen({ route }: { route: string }) {
     case 'nivel': return <Placement />;
     case 'contrarreloj': return <Rush />;
     case 'tienda': return <Shop />;
+    case 'liga': return <League />;
     case 'biblioteca': return <Library />;
     case 'entrenar': return <Train key="free" />;
     case 'sudoku': return <Play key="free" />;
@@ -75,6 +79,10 @@ function App() {
   const p = useProgress();
   const focus = route.startsWith('leccion-') || route === 'nivel' || route === 'contrarreloj';
   useEffect(() => { applyStreakFreeze(); }, []);
+  // Envía el progreso a la liga al abrir y cuando cambia la XP (agrupado, sin bloquear nada).
+  const xpNow = xpTotal(p);
+  useEffect(() => { if (!onlineEnabled() || !p.online) return; const t = window.setTimeout(() => sync().catch(() => {}), 2500); return () => window.clearTimeout(t); }, [xpNow, !!p.online]);
+  useEffect(() => { const on = () => { if (document.visibilityState === 'visible' && onlineEnabled() && getProgress().online) sync().catch(() => {}); }; document.addEventListener('visibilitychange', on); return () => document.removeEventListener('visibilitychange', on); }, []);
   useEffect(() => { const t = window.setTimeout(() => calm(checkRewards(p)).forEach((x, i) => window.setTimeout(() => toast(x), i * 900)), 700); return () => window.clearTimeout(t); }, [p.attempts.length, Object.keys(p.lessons).length, p.fullSolved, p.chests.length, p.rushBest]);
   const section = route.startsWith('tecnica-') ? 'biblioteca' : route.startsWith('entrenar') ? 'entrenar' : route.startsWith('sudoku') ? 'sudoku' : route;
   useEffect(() => {
@@ -87,7 +95,7 @@ function App() {
     <div className={`shell${focus ? ' focus' : ''}`}>
       <ConfettiLayer />
       <ToastLayer />
-      <MomentLayer paused={!(route === 'inicio' || route === 'progreso' || route === 'biblioteca' || route === 'tienda' || route === 'revision' || route === 'entrenar' || route.startsWith('tecnica-'))} />
+      <MomentLayer paused={!(route === 'inicio' || route === 'progreso' || route === 'biblioteca' || route === 'tienda' || route === 'revision' || route === 'entrenar' || route === 'liga' || route.startsWith('tecnica-'))} />
       {!focus && (
         <nav className="rail" aria-label="Principal">
           <button className="brand" onClick={() => go('inicio')} aria-label="Sudoku Academy, inicio">

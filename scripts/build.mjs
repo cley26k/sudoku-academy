@@ -1,7 +1,11 @@
 import { build } from 'esbuild';
 import { readFileSync, writeFileSync, mkdirSync } from 'fs';
+import { readFileSync as __rf, existsSync as __ex } from 'node:fs';
+const __cfg = __ex('supabase/config.json') ? JSON.parse(__rf('supabase/config.json', 'utf8')) : {};
+const SB_URL = (process.env.SA_SUPABASE_URL ?? __cfg.url ?? '').replace(/\/+$/, ''), SB_KEY = process.env.SA_SUPABASE_KEY ?? __cfg.anonKey ?? '';
+console.log('liga online:', SB_URL ? SB_URL : 'desactivada');
 const r = await build({ entryPoints: ['src/app/main.tsx'], bundle: true, minify: true, format: 'iife', write: false, jsx: 'automatic', target: 'es2020',
-  define: { 'process.env.NODE_ENV': '"production"' }, loader: { '.json': 'json' }, legalComments: 'none' });
+  define: { 'process.env.NODE_ENV': '"production"', __SA_SUPABASE_URL__: JSON.stringify(SB_URL), __SA_SUPABASE_KEY__: JSON.stringify(SB_KEY) }, loader: { '.json': 'json' }, legalComments: 'none' });
 const js = r.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
 const css = readFileSync('src/app/styles.css', 'utf8');
 const head = `<title>Sudoku Academy</title>

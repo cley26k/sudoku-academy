@@ -12,6 +12,7 @@ import { LevelGems, QuestsCard, StreakChip } from '../ui/game';
 import { moment } from '../gamify';
 import { sfx } from '../sound';
 import { ConceptPlayer } from '../ui/Concept';
+import { LeagueCard } from './League';
 import { sceneFor } from '../../content/scenes';
 
 type NodeKind = 'locked' | 'open' | 'done' | 'mastered' | 'pending';
@@ -139,6 +140,7 @@ export function Home() {
       <aside className="home-side">
         <div className="side-top"><TopStats /></div>
         <QuestsCard />
+        <LeagueCard />
         <button className="card card-cta c-purple" onClick={() => go('sudoku-diario')}>
           <Icon d={I.calendar} size={30} />
           <span><b>Reto diario</b><small>{p.daily[today]?.done ? '¡Hecho hoy!' : 'Un sudoku nuevo cada día'}</small></span>
