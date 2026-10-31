@@ -11,6 +11,8 @@ import { Friend, FRIEND_BY_UNIT } from '../ui/friends';
 import { LevelGems, QuestsCard, StreakChip } from '../ui/game';
 import { moment } from '../gamify';
 import { sfx } from '../sound';
+import { ConceptPlayer } from '../ui/Concept';
+import { sceneFor } from '../../content/scenes';
 
 type NodeKind = 'locked' | 'open' | 'done' | 'mastered' | 'pending';
 function nodeKind(p: Progress, s: Sheet): NodeKind {
@@ -237,6 +239,8 @@ export function SheetPage({ sheet }: { sheet: Sheet }) {
       {sheet.status === 'pending' ? (
         <div className="empty-state"><Tesela mood="think" size={120} /><h2>Próximamente</h2><p className="muted">Aún no está en el motor. No mostramos ejemplos falsos.</p></div>
       ) : (
+        <>
+        {sceneFor(sheet.id) && <section className="sheet-idea"><h2>La idea, paso a paso</h2><ConceptPlayer id={sheet.id} compact /></section>}
         <div className="sheet-grid">
           {ex && st && (
             <div className="sheet-example">
@@ -271,6 +275,7 @@ export function SheetPage({ sheet }: { sheet: Sheet }) {
             {sheet.aliases.length > 0 && <p className="small muted">También: {sheet.aliases.join(', ')}</p>}
           </div>
         </div>
+        </>
       )}
     </article>
   );

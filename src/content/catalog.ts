@@ -52,7 +52,7 @@ export const SHEETS: Sheet[] = [
   {
     id: 'naked_single', impl: 'naked_single', status: 'ready', name: 'Candidato único', aliases: ['Naked Single', 'Single desnudo'], abbr: 'CU', level: 'Fundamentos', family: 'Singles', unit: 1, difficulty: 1,
     prereqs: ['candidates'], related: ['hidden_single', 'naked_pair'],
-    intuition: 'Una casilla en la que solo cabe un número.',
+    intuition: 'Tachas lo que ya está en su fila, su columna y su caja. Si solo sobrevive un número, va ahí.',
     principle: 'Si los otros ocho dígitos ya aparecen entre la fila, la columna y la caja de una casilla (o se descartaron antes), el dígito restante es obligatorio.',
     conditions: ['La casilla está vacía.', 'Tiene exactamente un candidato.'],
     errors: [
@@ -71,7 +71,7 @@ export const SHEETS: Sheet[] = [
   {
     id: 'hidden_single', impl: 'hidden_single', status: 'ready', name: 'Lugar único', aliases: ['Hidden Single', 'Single oculto', 'Escaneo'], abbr: 'LU', level: 'Fundamentos', family: 'Singles', unit: 1, difficulty: 1,
     prereqs: ['candidates'], related: ['naked_single', 'hidden_pair', 'pointing'],
-    intuition: 'Un número que, dentro de una fila, columna o caja, solo tiene un sitio posible.',
+    intuition: 'Elige un número y una zona (fila, columna o caja). Si ese número solo cabe en una casilla, va ahí.',
     principle: 'Cada unidad debe contener cada número. Si todas las casillas de la unidad menos una están bloqueadas para un número, ese número va en la que queda, aunque la casilla tenga otros candidatos.',
     conditions: ['El número no está colocado todavía en la unidad.', 'Solo una casilla vacía de la unidad lo admite como candidato.'],
     errors: [
@@ -123,7 +123,7 @@ export const SHEETS: Sheet[] = [
   {
     id: 'naked_pair', impl: 'naked_pair', status: 'ready', name: 'Par desnudo', aliases: ['Naked Pair'], abbr: 'PD', level: 'Fundamentos', family: 'Subconjuntos', unit: 3, difficulty: 2,
     prereqs: ['naked_single'], related: ['naked_triple', 'hidden_pair'],
-    intuition: 'Dos casillas de una unidad que solo admiten los mismos dos números.',
+    intuition: 'Dos casillas de la misma zona que solo pueden ser los mismos dos números. Se los reparten, así que nadie más en la zona puede tenerlos.',
     principle: 'Esas dos casillas se quedarán con esos dos números en algún orden. Por tanto, ninguna otra casilla de la unidad compartida puede tenerlos.',
     conditions: ['Dos casillas de la misma unidad.', 'Ambas tienen exactamente los mismos dos candidatos.', 'Si además comparten caja, la eliminación vale en las dos unidades.'],
     errors: [
@@ -141,7 +141,7 @@ export const SHEETS: Sheet[] = [
   {
     id: 'hidden_pair', impl: 'hidden_pair', status: 'ready', name: 'Par oculto', aliases: ['Hidden Pair'], abbr: 'PO', level: 'Fundamentos', family: 'Subconjuntos', unit: 3, difficulty: 3,
     prereqs: ['hidden_single', 'naked_pair'], related: ['hidden_triple', 'naked_pair'],
-    intuition: 'Dos números que, en una unidad, solo pueden ir en las mismas dos casillas.',
+    intuition: 'Dos números que, en una zona, solo caben en las mismas dos casillas. Esas casillas son suyas: borra sus otros candidatos.',
     principle: 'Los dos números necesitan sitio en la unidad y solo tienen esas dos casillas. Las casillas quedan reservadas para ellos: sus demás candidatos sobran.',
     conditions: ['En una unidad, dos números aparecen como candidatos solo en las mismas dos casillas.', 'Esas casillas tienen otros candidatos que eliminar.'],
     errors: [{ text: 'Eliminar fuera de las dos casillas', why: 'El par oculto limpia sus propias casillas; para eliminar fuera hace falta un par desnudo.' }],
@@ -156,7 +156,7 @@ export const SHEETS: Sheet[] = [
   {
     id: 'naked_triple', impl: 'naked_triple', status: 'ready', name: 'Trío desnudo', aliases: ['Naked Triple'], abbr: 'TD', level: 'Intermedio', family: 'Subconjuntos', unit: 3, difficulty: 3,
     prereqs: ['naked_pair'], related: ['naked_pair', 'hidden_triple'],
-    intuition: 'Tres casillas de una unidad cuyos candidatos, juntos, son solo tres números.',
+    intuition: 'Tres casillas de la misma zona que, entre todas, solo usan tres números. Esos tres quedan reservados para ellas.',
     principle: 'Tres casillas y tres números: se los repartirán entre ellas. No hace falta que cada casilla tenga los tres; basta con que la unión de sus candidatos sea de tres números.',
     conditions: ['Tres casillas de la misma unidad.', 'La unión de sus candidatos tiene exactamente tres números.', 'Cada casilla tiene dos o tres candidatos.'],
     errors: [{ text: 'Exigir que las tres casillas tengan los tres números', why: '{1,2}, {2,3} y {1,3} también forman un trío desnudo.' }],
@@ -171,7 +171,7 @@ export const SHEETS: Sheet[] = [
   {
     id: 'hidden_triple', impl: 'hidden_triple', status: 'ready', name: 'Trío oculto', aliases: ['Hidden Triple'], abbr: 'TO', level: 'Intermedio', family: 'Subconjuntos', unit: 3, difficulty: 3,
     prereqs: ['hidden_pair', 'naked_triple'], related: ['hidden_pair'],
-    intuition: 'Tres números que, en una unidad, solo pueden ir en las mismas tres casillas.',
+    intuition: 'Tres números que, en una zona, solo caben en las mismas tres casillas. Esas casillas no pueden ser nada más.',
     principle: 'Tres números necesitan tres sitios y solo tienen esas tres casillas. Las casillas quedan reservadas y sus demás candidatos se eliminan.',
     conditions: ['En una unidad, tres números solo aparecen como candidatos en las mismas tres casillas (entre todos).', 'Esas casillas tienen otros candidatos.'],
     errors: [{ text: 'Buscarlo en casillas con muchos candidatos y rendirse', why: 'Los tríos ocultos se ven mejor contando sitios por número, no candidatos por casilla.' }],
@@ -184,7 +184,7 @@ export const SHEETS: Sheet[] = [
   {
     id: 'x_wing', impl: 'x_wing', status: 'ready', name: 'X-Wing', aliases: ['Pez de tamaño 2'], abbr: 'XW', level: 'Intermedio', family: 'Peces', unit: 4, difficulty: 3,
     prereqs: ['pointing', 'claiming'], related: ['swordfish', 'simple_coloring'],
-    intuition: 'Un número que, en dos filas, solo puede ir en las mismas dos columnas (o al revés).',
+    intuition: 'Un número que en dos filas solo tiene dos sitios, y en las mismas columnas. Sea como sea, esas columnas ya tienen su número.',
     principle: 'Cada fila base debe tener el número, y solo puede ponerlo en dos columnas. Como cada columna admite un único ejemplar, las dos filas ocupan las dos columnas, una cada una. Esas columnas ya tienen su número dentro de las filas base, así que fuera de ellas se elimina.',
     conditions: ['Un solo dígito.', 'Dos filas (base) donde el dígito tiene exactamente dos posiciones, en las mismas dos columnas (cubierta). O la versión transpuesta con columnas como base.', 'Hay candidatos de ese dígito en las columnas de cubierta fuera de las filas base.'],
     errors: [
@@ -204,7 +204,7 @@ export const SHEETS: Sheet[] = [
   {
     id: 'swordfish', impl: 'swordfish', status: 'ready', name: 'Swordfish', aliases: ['Pez de tamaño 3'], abbr: 'SF', level: 'Intermedio', family: 'Peces', unit: 4, difficulty: 4,
     prereqs: ['x_wing'], related: ['x_wing', 'jellyfish'],
-    intuition: 'El X-Wing con tres filas y tres columnas.',
+    intuition: 'Como el X-Wing, pero con tres filas: el número solo cabe en tres columnas en total, así que esas columnas quedan servidas.',
     principle: 'Tres filas deben colocar el número y, entre todas, solo disponen de tres columnas. Tres números en tres columnas distintas: cada columna recibe exactamente uno de ellos. Fuera de las filas base, esas columnas no pueden tener el número.',
     conditions: ['Un solo dígito.', 'Tres filas base, cada una con 2 o 3 posiciones del dígito.', 'La unión de esas posiciones ocupa exactamente tres columnas.', 'No hace falta que cada fila use las tres columnas.'],
     errors: [{ text: 'Exigir tres posiciones por fila', why: 'Un patrón 2-2-2 también es un Swordfish válido.' }],
@@ -219,7 +219,7 @@ export const SHEETS: Sheet[] = [
   {
     id: 'jellyfish', impl: 'jellyfish', status: 'ready', name: 'Jellyfish', aliases: ['Pez de tamaño 4'], abbr: 'JF', level: 'Avanzado', family: 'Peces', unit: 4, difficulty: 5,
     prereqs: ['swordfish'], related: ['swordfish'],
-    intuition: 'El mismo principio de los peces con cuatro líneas.',
+    intuition: 'El mismo truco del X-Wing con cuatro filas y cuatro columnas.',
     principle: 'Cuatro filas deben colocar el número y solo disponen de cuatro columnas: esas columnas quedan cubiertas por las filas base.',
     conditions: ['Un solo dígito.', 'Cuatro líneas base con 2 a 4 posiciones cada una.', 'La unión ocupa exactamente cuatro líneas de cubierta.'],
     errors: [{ text: 'Buscarlo antes que peces más pequeños', why: 'Si existe un pez menor con las mismas eliminaciones, es preferible.' }],
@@ -231,7 +231,7 @@ export const SHEETS: Sheet[] = [
   {
     id: 'y_wing', impl: 'y_wing', status: 'ready', name: 'Y-Wing', aliases: ['XY-Wing'], abbr: 'YW', level: 'Intermedio', family: 'Alas', unit: 5, difficulty: 3,
     prereqs: ['naked_pair'], related: ['xyz_wing', 'w_wing'],
-    intuition: 'Un pivote de dos candidatos que, sea cual sea su valor, obliga a una de dos «pinzas» a tener el mismo número.',
+    intuition: 'Una casilla (pivote) con dos opciones ve a dos «pinzas». Sea lo que sea el pivote, una pinza acaba siendo el mismo número.',
     principle: 'Pivote {A,B}, pinzas {A,C} y {B,C}, ambas vistas por el pivote. Si el pivote es A, la pinza {A,C} es C; si es B, la pinza {B,C} es C. Una de las pinzas es C, así que cualquier casilla que vea a las dos no puede ser C.',
     conditions: ['Tres casillas de dos candidatos: pivote {A,B}, pinzas {A,C} y {B,C}.', 'El pivote ve a ambas pinzas.', 'Se elimina C de las casillas que ven a las dos pinzas.'],
     errors: [
@@ -249,7 +249,7 @@ export const SHEETS: Sheet[] = [
   {
     id: 'xyz_wing', impl: 'xyz_wing', status: 'ready', name: 'XYZ-Wing', aliases: [], abbr: 'XZ', level: 'Intermedio', family: 'Alas', unit: 5, difficulty: 4,
     prereqs: ['y_wing'], related: ['y_wing'],
-    intuition: 'Un Y-Wing cuyo pivote también admite el número común.',
+    intuition: 'Como el Y-Wing, pero el pivote también puede ser el número común. Solo se borra donde se ven las tres casillas.',
     principle: 'Pivote {A,B,C}, pinzas {A,C} y {B,C}. Si el pivote es C, la C está en el pivote; si es A o B, la C está en una pinza. La C está en una de las tres casillas, así que solo se elimina de casillas que ven a las tres.',
     conditions: ['Pivote con tres candidatos; dos pinzas de dos candidatos contenidas en él.', 'El pivote ve a ambas pinzas.', 'Se elimina C de casillas que ven al pivote y a las dos pinzas.'],
     errors: [{ text: 'Olvidar que también hay que ver al pivote', why: 'El propio pivote puede ser la C.' }],
@@ -263,7 +263,7 @@ export const SHEETS: Sheet[] = [
   {
     id: 'w_wing', impl: 'w_wing', status: 'ready', name: 'W-Wing', aliases: [], abbr: 'WW', level: 'Intermedio', family: 'Alas', unit: 5, difficulty: 4,
     prereqs: ['y_wing', 'x_wing'], related: ['y_wing', 'simple_coloring'],
-    intuition: 'Dos casillas lejanas con el mismo par {X,Y}, conectadas por un enlace fuerte del Y.',
+    intuition: 'Dos casillas iguales de dos opciones (por ejemplo 4 o 9), unidas por un número que solo tiene dos sitios en una fila. Al menos una es 4.',
     principle: 'Si ninguna de las dos fuera X, ambas serían Y. Pero hay una unidad donde el Y solo tiene dos sitios, y cada uno ve a una de las casillas: ambos sitios quedarían bloqueados y esa unidad se quedaría sin Y. Por tanto, al menos una de las dos casillas es X.',
     conditions: ['Dos casillas {X,Y} que no se ven.', 'Una unidad con exactamente dos posiciones de Y (enlace fuerte), cada una vista por una de las casillas.', 'Se elimina X de casillas que ven a ambas.'],
     errors: [{ text: 'Usar un enlace débil (tres o más posiciones)', why: 'Sin enlace fuerte, el Y podría ir a un tercer sitio y no hay contradicción.' }],
@@ -358,7 +358,7 @@ export const SHEETS: Sheet[] = [
   {
     id: 'x_chain', impl: 'x_chain', status: 'ready', name: 'X-Chain', aliases: ['X-Cycles (cadena abierta)', 'Skyscraper', '2-String Kite', 'Turbot Fish'], abbr: 'XC', level: 'Avanzado', family: 'Cadenas', unit: 7, difficulty: 4,
     prereqs: ['simple_coloring'], related: ['simple_coloring', 'aic'],
-    intuition: 'Una cadena de un solo número que alterna «si no está aquí, está allí» y «si está aquí, no está allí».',
+    intuition: 'Sigue un número saltando de casilla en casilla: «si no está aquí, está allí», «si está aquí, no está allí». Uno de los extremos es seguro.',
     principle: 'Empieza y termina con un enlace fuerte. Si el primer extremo es falso, la cadena obliga a que el último sea verdadero. Así que al menos uno de los dos extremos tiene el número, y quien vea a ambos lo pierde. Skyscraper, 2-String Kite y Turbot son X-Chains cortas.',
     conditions: ['Un solo dígito.', 'Enlaces alternos: fuerte, débil, fuerte… terminando en fuerte.', 'Se elimina el dígito de las casillas que ven a los dos extremos.'],
     errors: [{ text: 'Poner dos enlaces débiles seguidos', why: 'Un débil no obliga a nada si el anterior es falso.' }],
@@ -377,7 +377,7 @@ export const SHEETS: Sheet[] = [
   {
     id: 'multi_coloring', impl: 'multi_coloring', status: 'ready', name: 'Coloreado múltiple', aliases: ['Multi-Coloring'], abbr: 'CM', level: 'Avanzado', family: 'Cadenas', unit: 7, difficulty: 5,
     prereqs: ['simple_coloring'], related: ['simple_coloring', 'medusa'],
-    intuition: 'Dos cadenas de color del mismo número que se «tocan».',
+    intuition: 'Dos grupos de colores del mismo número que se tocan. Eso obliga a que uno de dos colores sea verdadero.',
     principle: 'En cada cadena un color es verdadero. Si un color de la cadena 1 ve a un color de la cadena 2, no pueden ser los dos verdaderos: al menos uno de los otros colores lo es. Quien vea un color «otro» de cada cadena pierde el número.',
     conditions: ['Un solo dígito y dos cadenas separadas de enlaces fuertes.', 'Un color de una ve a un color de la otra.'],
     errors: [{ text: 'Mezclar las cadenas en una sola', why: 'Si estuvieran unidas, sería coloreado simple.' }],
@@ -386,7 +386,7 @@ export const SHEETS: Sheet[] = [
   {
     id: 'medusa', impl: 'medusa', status: 'ready', name: '3D Medusa', aliases: ['Medusa'], abbr: 'MD', level: 'Avanzado', family: 'Cadenas', unit: 7, difficulty: 5,
     prereqs: ['simple_coloring', 'xy_chain'], related: ['multi_coloring', 'aic'],
-    intuition: 'Coloreado que salta entre números: usa casillas de dos candidatos y números con dos sitios.',
+    intuition: 'Coloreado que pinta varios números a la vez: salta dentro de casillas de dos opciones y por números con dos sitios.',
     principle: 'Todos los azules son verdaderos o todos los rosas. Un color es falso si pone dos números en una casilla o el mismo número dos veces en una unidad. Un candidato sin color sobra si ve ambos colores de su número, si su casilla tiene ambos colores, o si su casilla tiene un color y ve el otro color de su número.',
     conditions: ['Red de enlaces fuertes de varios números.', 'Se aplican las reglas de contradicción y de trampa.'],
     errors: [{ text: 'Usar enlaces débiles para colorear', why: 'Solo los enlaces fuertes garantizan que un color sea el contrario del otro.' }],
@@ -395,7 +395,7 @@ export const SHEETS: Sheet[] = [
   {
     id: 'aic', impl: 'aic', status: 'ready', name: 'AIC', aliases: ['Alternating Inference Chains', 'Cadenas de inferencia alterna'], abbr: 'AI', level: 'Avanzado', family: 'Cadenas', unit: 7, difficulty: 5,
     prereqs: ['x_chain', 'xy_chain'], related: ['x_chain', 'xy_chain', 'medusa'],
-    intuition: 'La cadena general: mezcla números y casillas, alternando enlaces fuertes y débiles.',
+    intuition: 'La cadena más general: mezcla números y casillas. Mientras alternes fuerte y débil, la lógica se sostiene.',
     principle: 'Si el primer candidato es falso, la cadena obliga a que el último sea verdadero. Si los extremos son el mismo número, quien vea a ambos lo pierde. Si están en la misma casilla, el resto de sus candidatos sobra. Si son números distintos en casillas que se ven, cada extremo pierde el número del otro.',
     conditions: ['Empieza y termina con enlace fuerte.', 'Alterna fuerte y débil.', 'Fuerte: única pareja de una unidad o casilla de dos candidatos. Débil: misma casilla, o mismo número en casillas que se ven.'],
     errors: [{ text: 'Tratar un enlace débil como fuerte', why: 'Si hay tres sitios, que no esté en uno no dice dónde está.' }],

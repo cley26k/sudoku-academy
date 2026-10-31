@@ -7,6 +7,8 @@ import { Board } from '../ui/Board';
 import { TutorBubble, Tesela } from '../ui/Tutor';
 import { Btn, useFrames, FrameControls, celebrate, CoordHint, Icon, I } from '../ui/common';
 import { CountUp } from '../ui/game';
+import { ConceptPlayer } from '../ui/Concept';
+import { sceneFor } from '../../content/scenes';
 import { awardPerfect } from '../gamify';
 import { LessonTop, BottomBar, ExLayout } from '../ui/layout';
 import { recordAttempt, completeLesson } from '../store';
@@ -97,7 +99,7 @@ function Understand({ sheet, ex, header, onNext }: { sheet: Sheet; ex: LiveExerc
   const st = ex.steps[0];
   const [sel, setSel] = useState<number | null>(null);
   const [scen, setScen] = useState<number | null>(null);
-  const [step, setStep] = useState<'explore' | 'quiz'>('explore');
+  const [step, setStep] = useState<'idea' | 'explore' | 'quiz'>(() => (sceneFor(sheet.id) ? 'idea' : 'explore'));
   const [answer, setAnswer] = useState<number | null>(null);
   const q = sheet.questions[0];
   const overlays: (Overlay | null)[] = [scen !== null && st.scenarios ? st.scenarios[scen].frames[0] : st.hints[2]];
@@ -105,6 +107,16 @@ function Understand({ sheet, ex, header, onNext }: { sheet: Sheet; ex: LiveExerc
   if (scen !== null && st.scenarios) text = st.scenarios[scen].frames[0].text;
   else if (sel !== null && !ex.state.v[sel]) text = `${cellName(sel)} puede ser ${digitsOf(ex.state.c[sel]).join(', ')}.`;
 
+  if (step === 'idea') return (
+    <div className="runner">
+      {header}
+      <div className="idea-screen">
+        <h2 className="ex-title">La idea</h2>
+        <ConceptPlayer id={sheet.id} />
+      </div>
+      <BottomBar left={<Btn kind="ghost" onClick={() => setStep('explore')}>Saltar</Btn>} right={<Btn kind="primary" big onClick={() => setStep('explore')}>Ahora en un sudoku real</Btn>} />
+    </div>
+  );
   if (step === 'quiz' && q) {
     const ok = answer === q.answer;
     return (

@@ -18,6 +18,7 @@ const D = JSON.parse(process.env.DATA);
   if (D.A.length > 1) { await btn('Comprobar').click(); console.log('A partial:', await bar()); await btn('Seguir').click(); }
   await clickCell(D.A[D.A.length - 1]); await btn('Comprobar').click(); console.log('A:', await bar()); await shot('A');
   await btn('Continuar').click();
+  if (await pg.locator('.concept').count()) { await pg.waitForTimeout(1200); await shot('IDEA'); await btn('Ahora en un sudoku real').click(); }
   const sc = pg.locator('.scen'); if (await sc.count()) { await sc.first().click(); await shot('B'); }
   await btn('Continuar').click();
   if (await pg.locator('.quiz-opt').count()) { await pg.locator('.quiz-opt').first().click(); console.log('Quiz:', await bar()); await btn('Continuar').click(); }
