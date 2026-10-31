@@ -11,8 +11,8 @@ import { SHEET_BY_ID, READY } from '../content/catalog';
 import { UnitTest } from './screens/Play';
 import { Welcome, Placement } from './screens/Welcome';
 import { Rush } from './screens/Rush';
-import { ToastLayer, Shop } from './ui/game';
-import { checkRewards, toast, applyStreakFreeze } from './gamify';
+import { ToastLayer, Shop, MomentLayer } from './ui/game';
+import { checkRewards, toast, applyStreakFreeze, Toast } from './gamify';
 import { I, Icon, ConfettiLayer } from './ui/common';
 import { useProgress, update, getProgress } from './store';
 import { Tesela } from './ui/Tutor';
@@ -20,6 +20,14 @@ import type { TechId } from '../engine/step';
 import { TECH_BY_ID } from '../engine/techniques';
 import { initAudio, setMusic } from './sound';
 initAudio();
+
+/** Varios logros a la vez se agrupan en un solo aviso: menos ruido en pantalla. */
+function calm(ts: Toast[]): Toast[] {
+  const ach = ts.filter(t => t.title.startsWith('Logro')), rest = ts.filter(t => !t.title.startsWith('Logro'));
+  if (ach.length < 2) return ts;
+  const gems = ach.reduce((s, t) => s + Number(/\+(\d+) gemas/.exec(t.text ?? '')?.[1] ?? 0), 0);
+  return [{ title: `${ach.length} logros nuevos`, text: `${ach.map(t => t.title.replace(/^Logro: /, '').split(' · ')[0]).join(', ')}. +${gems} gemas`, icon: 'medal', tone: 'gold' }, ...rest];
+}
 
 const NAV = [
   { r: 'inicio', label: 'Aprender', icon: I.map, c: 'green' },
@@ -67,7 +75,7 @@ function App() {
   const p = useProgress();
   const focus = route.startsWith('leccion-') || route === 'nivel' || route === 'contrarreloj';
   useEffect(() => { applyStreakFreeze(); }, []);
-  useEffect(() => { const t = window.setTimeout(() => checkRewards(p).forEach((x, i) => window.setTimeout(() => toast(x), i * 900)), 700); return () => window.clearTimeout(t); }, [p.attempts.length, Object.keys(p.lessons).length, p.fullSolved, p.chests.length, p.rushBest]);
+  useEffect(() => { const t = window.setTimeout(() => calm(checkRewards(p)).forEach((x, i) => window.setTimeout(() => toast(x), i * 900)), 700); return () => window.clearTimeout(t); }, [p.attempts.length, Object.keys(p.lessons).length, p.fullSolved, p.chests.length, p.rushBest]);
   const section = route.startsWith('tecnica-') ? 'biblioteca' : route.startsWith('entrenar') ? 'entrenar' : route.startsWith('sudoku') ? 'sudoku' : route;
   useEffect(() => {
     const t = p.settings.theme;
@@ -79,6 +87,7 @@ function App() {
     <div className={`shell${focus ? ' focus' : ''}`}>
       <ConfettiLayer />
       <ToastLayer />
+      <MomentLayer paused={!(route === 'inicio' || route === 'progreso' || route === 'biblioteca' || route === 'tienda' || route === 'revision' || route === 'entrenar' || route.startsWith('tecnica-'))} />
       {!focus && (
         <nav className="rail" aria-label="Principal">
           <button className="brand" onClick={() => go('inicio')} aria-label="Sudoku Academy, inicio">

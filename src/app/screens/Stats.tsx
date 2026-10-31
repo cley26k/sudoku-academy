@@ -8,8 +8,7 @@ import { go } from '../router';
 import { Tesela } from '../ui/Tutor';
 import { LessonTop } from '../ui/layout';
 import { setMusic } from '../sound';
-import { AchievementsGrid } from '../ui/game';
-import { levelOf } from '../gamify';
+import { AchievementsGrid, ProfileCard, WeekLeague, WeekStrip } from '../ui/game';
 
 function Bars({ data, labels }: { data: (number | null)[]; labels: string[] }) {
   return (
@@ -35,9 +34,14 @@ export function ProgressPage() {
     <div className="progress">
       <h1>Progreso</h1>
       {!storageAvailable() && <div className="notice">Este navegador no guarda datos. Usa «Exportar» en Ajustes.</div>}
+      <ProfileCard />
+      <div className="two-up">
+        <WeekLeague />
+        <div className="card streak-card"><div className="card-head"><h3>Racha</h3><span className="muted small">récord {Math.max(p.bestStreak ?? 0, streak(p))}</span></div><div className="sc-n"><Icon d={I.flame} size={34} stroke={2.4} /><b>{streak(p)}</b><span>{streak(p) === 1 ? 'día' : 'días'}</span></div><WeekStrip /></div>
+      </div>
       <div className="stat-tiles big">
-        <div className="st st-orange"><Icon d={I.flame} size={26} /><b>{streak(p)}</b><span>Racha</span></div>
-        <div className="st st-yellow"><Icon d={I.star} size={26} /><b>{levelOf(xpTotal(p)).level}</b><span>Nivel · {xpTotal(p)} XP</span></div>
+        <div className="st st-yellow"><Icon d={I.star} size={26} /><b>{xpTotal(p)}</b><span>XP total</span></div>
+        <div className="st st-green"><Icon d={I.book} size={26} /><b>{Object.values(p.lessons).filter(l => l.done).length}</b><span>Lecciones</span></div>
         <div className="st st-blue"><Icon d={I.target} size={26} /><b>{scored.length}</b><span>Ejercicios</span></div>
         <div className="st st-purple"><Icon d={I.grid} size={26} /><b>{p.fullSolved}</b><span>Sudokus</span></div>
       </div>

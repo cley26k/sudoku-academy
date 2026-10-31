@@ -30,6 +30,7 @@ const { chromium } = require('playwright');
   console.log('steps', n, await pg.locator('.bubble').first().innerText());
   await pg.screenshot({ path: `/tmp/claude-0/shots/e2e-full-${W}.png` });
   await pg.goto('file:///home/claude/sudoku-academy/dist/index.html#inicio'); await pg.waitForTimeout(300);
+  for (let i = 0; i < 4 && await pg.locator('.moment').count(); i++) { console.log('moment', await pg.locator('.moment h1').innerText()); await pg.screenshot({ path: `/tmp/claude-0/shots/e2e-moment${i}-${W}.png` }); await pg.locator('.moment .btn').click(); await pg.waitForTimeout(300); }
   await pg.locator('.pnode').first().click(); await pg.waitForTimeout(300);
   await pg.screenshot({ path: `/tmp/claude-0/shots/e2e-home-${W}.png` });
   await pg.goto('file:///home/claude/sudoku-academy/dist/index.html#progreso'); await pg.waitForTimeout(300);

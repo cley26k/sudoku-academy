@@ -5,7 +5,9 @@ import { lessonExercise } from '../bank';
 import { ExerciseRunner, RunResult } from '../ui/ExerciseRunner';
 import { Board } from '../ui/Board';
 import { TutorBubble, Tesela } from '../ui/Tutor';
-import { Btn, useFrames, FrameControls, celebrate, CoordHint } from '../ui/common';
+import { Btn, useFrames, FrameControls, celebrate, CoordHint, Icon, I } from '../ui/common';
+import { CountUp } from '../ui/game';
+import { awardPerfect } from '../gamify';
 import { LessonTop, BottomBar, ExLayout } from '../ui/layout';
 import { recordAttempt, completeLesson } from '../store';
 import { cellName, digitsOf } from '../../engine/grid';
@@ -27,7 +29,8 @@ export function Lesson({ sheet }: { sheet: Sheet }) {
   const eE = useBackground(() => e0m && lessonExercise(tech, 2 + retry * 10, { puzzleNot: e0m.puzzleIndex }), [tech, retry], 160);
   const eF = useBackground(() => e0m && lessonExercise(tech, 3 + retry * 10, { variantNot: e0m.variant, puzzleNot: e0m.puzzleIndex }), [tech, retry], 260);
   const ex = { e0: e0m, eD };
-  const [res, setRes] = useState<{ E?: RunResult; F?: RunResult }>({});
+  const [res, setRes] = useState<{ A?: RunResult; D?: RunResult; E?: RunResult; F?: RunResult }>({});
+  const t0 = useMemo(() => Date.now(), [tech, retry]);
   const [finished, setFinished] = useState(false);
   const close = () => go(`tecnica-${sheet.id}`);
 
@@ -38,13 +41,13 @@ export function Lesson({ sheet }: { sheet: Sheet }) {
   const e0 = ex.e0;
 
   const rec = (key: 'A' | 'D' | 'E' | 'F', e: LiveExercise, kind: 'lesson' | 'test') => (r: RunResult) => {
-    if (key === 'E' || key === 'F') setRes(x => ({ ...x, [key]: r }));
+    setRes(x => ({ ...x, [key]: r }));
     recordAttempt({ tech, kind, ok: r.ok, hints: r.hints, errors: r.errors, ms: r.ms, variant: r.variant, exId: e.id }, r.ok ? undefined : r.note);
   };
   const testPassed = !!(res.E?.ok && res.F?.ok && res.E.hints === 0 && res.F.hints === 0 && (res.E.errors + res.F.errors) <= 1);
   const top = <LessonTop progress={finished ? 1 : phase / N_PHASES} onClose={close} />;
 
-  if (finished) return <LessonEnd sheet={sheet} passed={testPassed} top={top} onRetry={() => { setRetry(r => r + 1); setRes({}); setFinished(false); setPhase(4); }} />;
+  if (finished) return <LessonEnd sheet={sheet} passed={testPassed} top={top} res={res} ms={Date.now() - t0} onRetry={() => { setRetry(r => r + 1); setRes({}); setFinished(false); setPhase(4); }} />;
 
   const common = { header: top };
   if (phase === 0) return <ExerciseRunner key="A" ex={e0} task="recognize" hints {...common} title="Encuentra el patrón"
@@ -59,19 +62,29 @@ export function Lesson({ sheet }: { sheet: Sheet }) {
     intro="Misma idea, otra forma. Busca la idea, no el dibujo." onResult={rec('F', eF!, 'test')} onNext={() => { completeLesson(sheet.id, testPassed); setFinished(true); }} />;
 }
 
-function LessonEnd({ sheet, passed, top, onRetry }: { sheet: Sheet; passed: boolean; top: React.ReactNode; onRetry: () => void }) {
-  useEffect(() => { celebrate(); sfx('complete'); }, []);
+function LessonEnd({ sheet, passed, top, onRetry, res, ms }: { sheet: Sheet; passed: boolean; top: React.ReactNode; onRetry: () => void; res: Partial<Record<'A' | 'D' | 'E' | 'F', RunResult>>; ms: number }) {
+  const rs = (['A', 'D', 'E', 'F'] as const).map(k => res[k]).filter(Boolean) as RunResult[];
+  const first = rs.filter(r => r.ok && r.errors === 0).length;
+  const acc = rs.length ? Math.round((100 * first) / rs.length) : 0;
+  const perfect = passed && rs.length === 4 && first === 4 && rs.every(r => r.hints === 0);
+  const [time] = useState(ms);
+  useEffect(() => { celebrate(); sfx('complete'); if (perfect) awardPerfect(); }, []);
+  const xp = 20 + (perfect ? 10 : 0) + rs.reduce((a, r) => a + (!r.ok ? 0 : r.hints ? 5 : 10), 0);
+  const mmss = (t: number) => `${Math.floor(t / 60000)}:${String(Math.floor(t / 1000) % 60).padStart(2, '0')}`;
   return (
     <div className="runner">
       {top}
       <div className={`lesson-end c-${UNITS_MAP.find(u => u.n === sheet.unit)!.color}`}>
         <div className="end-cast"><Tesela mood={passed ? 'wow' : 'happy'} size={150} />{FRIEND_BY_UNIT[sheet.unit] !== 'tesela' && <Friend kind={FRIEND_BY_UNIT[sheet.unit] as never} size={120} />}</div>
-        <h1>{passed ? '¡Técnica superada!' : '¡Lección completada!'}</h1>
+        <h1>{perfect ? '¡Lección perfecta!' : passed ? '¡Técnica superada!' : '¡Lección completada!'}</h1>
         <p className="muted">{sheet.name}</p>
-        <div className="stat-tiles">
-          <div className="st st-yellow"><span>XP</span><b>+20</b></div>
-          <div className={`st ${passed ? 'st-green' : 'st-blue'}`}><span>Prueba</span><b>{passed ? '✓' : 'Repetir'}</b></div>
+        {perfect && <span className="perfect-ribbon"><Icon d={I.star} size={16} stroke={2.8} />Sin errores ni pistas · +10 XP</span>}
+        <div className="stat-tiles three">
+          <div className="st st-yellow"><span>XP</span><b>+<CountUp to={xp} delay={200} /></b></div>
+          <div className={`st ${acc >= 75 ? 'st-green' : 'st-orange'}`}><span>Precisión</span><b><CountUp to={acc} delay={350} />%</b></div>
+          <div className="st st-blue"><span>Tiempo</span><b>{mmss(time)}</b></div>
         </div>
+        {!passed && <p className="small muted">La prueba sin pistas aún no está superada.</p>}
       </div>
       <BottomBar
         left={!passed ? <Btn kind="ghost" onClick={onRetry}>Repetir prueba</Btn> : <Btn kind="ghost" onClick={() => go('inicio')}>Mapa</Btn>}

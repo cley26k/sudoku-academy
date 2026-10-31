@@ -32,9 +32,12 @@ export interface Progress {
   bonusXp: Record<string, number>;         // día → XP extra (combos, misiones)
   combo: { day: string; best: number };
   bestStreak: number;
+  dailyChests: string[];                   // días con cofre diario abierto
+  streakSeen: string;                      // último día en que se celebró la racha
+  perfect: number;                         // lecciones perfectas
 }
 const KEY = 'sudoku-academy/v1';
-const fresh = (): Progress => ({ v: 1, lessons: {}, attempts: [], mistakes: [], sessions: [], daily: {}, settings: { streaks: true, theme: 'system', sound: true, music: false }, fullSolved: 0, chests: [], gems: 0, owned: [], equipped: {}, quests: {}, achievements: {}, levelSeen: 1, rushBest: 0, rushDays: [], freezes: 0, freezeDays: [], bonusXp: {}, combo: { day: '', best: 0 }, bestStreak: 0 });
+const fresh = (): Progress => ({ v: 1, lessons: {}, attempts: [], mistakes: [], sessions: [], daily: {}, settings: { streaks: true, theme: 'system', sound: true, music: false }, fullSolved: 0, chests: [], gems: 0, owned: [], equipped: {}, quests: {}, achievements: {}, levelSeen: 1, rushBest: 0, rushDays: [], freezes: 0, freezeDays: [], bonusXp: {}, combo: { day: '', best: 0 }, bestStreak: 0, dailyChests: [], streakSeen: '', perfect: 0 });
 
 function load(): Progress {
   try {
@@ -146,11 +149,13 @@ export function completeLesson(id: string, test?: boolean) {
 // ---- XP (recompensa discreta; no afecta al cálculo de dominio) ----
 export const DAILY_GOAL = 50;
 export const xpFor = (a: Attempt) => (!a.ok ? 0 : a.kind === 'full' ? 30 : a.hints ? 5 : 10);
-export function xpToday(p: Progress): number {
-  const today = dayKey(Date.now());
-  return (p.bonusXp?.[today] ?? 0) + p.attempts.filter(a => dayKey(a.t) === today).reduce((s, a) => s + xpFor(a), 0)
-    + Object.values(p.lessons).filter(l => l.done && dayKey(l.t) === today).length * 20;
+export function xpOn(p: Progress, day: string): number {
+  return (p.bonusXp?.[day] ?? 0) + p.attempts.filter(a => dayKey(a.t) === day).reduce((s, a) => s + xpFor(a), 0)
+    + Object.values(p.lessons).filter(l => l.done && dayKey(l.t) === day).length * 20;
 }
+export const xpToday = (p: Progress) => xpOn(p, dayKey(Date.now()));
+/** Días activos (práctica real o protegidos) */
+export const activeDays = (p: Progress) => new Set([...p.attempts.map(a => dayKey(a.t)), ...(p.freezeDays ?? [])]);
 export function xpTotal(p: Progress): number {
   return p.attempts.reduce((s, a) => s + xpFor(a), 0) + Object.values(p.lessons).filter(l => l.done).length * 20 + p.chests.length * 25 + Object.values(p.bonusXp ?? {}).reduce((a, b) => a + b, 0);
 }

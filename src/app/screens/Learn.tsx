@@ -8,7 +8,8 @@ import { Board } from '../ui/Board';
 import { UnitArt, Chest } from '../ui/art';
 import { lessonExercise } from '../bank';
 import { Friend, FRIEND_BY_UNIT } from '../ui/friends';
-import { LevelGems, QuestsCard } from '../ui/game';
+import { LevelGems, QuestsCard, StreakChip } from '../ui/game';
+import { moment } from '../gamify';
 import { sfx } from '../sound';
 
 type NodeKind = 'locked' | 'open' | 'done' | 'mastered' | 'pending';
@@ -26,7 +27,7 @@ export function TopStats() {
   const p = useProgress();
   return (
     <div className="topstats">
-      {p.settings.streaks && <span className="ts ts-flame" title="Días seguidos"><Icon d={I.flame} size={22} stroke={2.4} /><b>{streak(p)}</b></span>}
+      {p.settings.streaks && <StreakChip />}
       <LevelGems compact />
     </div>
   );
@@ -122,7 +123,7 @@ export function Home() {
                 )}
                 {items.length > 0 && (
                   <div className="prow" style={{ ['--off' as never]: `${OFF[row++ % 8]}px` }}>
-                    <button className={`chest-btn${allDone && !claimed ? ' ready' : ''}`} disabled={!allDone || claimed} onClick={() => { claimChest(u.n); celebrate(); sfx('chest'); }} aria-label={claimed ? 'Cofre abierto' : allDone ? 'Abrir cofre: +25 XP' : 'Cofre: completa la unidad'}>
+                    <button className={`chest-btn${allDone && !claimed ? ' ready' : ''}`} disabled={!allDone || claimed} onClick={() => { claimChest(u.n); sfx('chest'); moment({ kind: 'unit', n: u.n }); }} aria-label={claimed ? 'Cofre abierto' : allDone ? 'Abrir cofre: +25 XP' : 'Cofre: completa la unidad'}>
                       <span data-pt="" data-done={allDone ? '1' : '0'} className="chest-pt"><Chest open={claimed} /></span>
                       {allDone && !claimed && <span className="pnode-tip">+25 XP</span>}
                     </button>

@@ -1,6 +1,6 @@
 // Capa de juego: nivel, logros, misiones diarias, gemas, tienda, combos y protector de racha.
 // Todo se calcula a partir de lo que el usuario hace de verdad (no hay rivales ni datos inventados).
-import { Progress, update, xpTotal, xpToday, dayKey, streak, mastery, getProgress } from './store';
+import { Progress, update, xpTotal, xpToday, xpOn, dayKey, streak, mastery, getProgress, activeDays } from './store';
 import { READY } from '../content/catalog';
 import { hashString } from '../engine/random';
 
@@ -23,6 +23,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'veloz', name: 'Ojo rápido', desc: 'Aciertos sin pistas en menos de 15 s', icon: 'bolt', tiers: [1, 10, 50], value: p => p.attempts.filter(a => a.ok && a.hints === 0 && a.ms < 15000 && a.kind !== 'full').length },
   { id: 'sudokus', name: 'Resolutor', desc: 'Sudokus completos', icon: 'grid', tiers: [1, 10, 50], value: p => p.fullSolved },
   { id: 'perfecto', name: 'Perfeccionista', desc: 'Sudokus sin errores ni pistas', icon: 'star', tiers: [1, 5, 20], value: p => p.attempts.filter(a => a.kind === 'full' && a.ok && a.errors === 0 && a.hints === 0).length },
+  { id: 'impecable', name: 'Impecable', desc: 'Lecciones perfectas', icon: 'medal', tiers: [1, 5, 15], value: p => p.perfect ?? 0 },
   { id: 'maestro', name: 'Maestro', desc: 'Técnicas dominadas', icon: 'crown', tiers: [1, 5, 15], value: p => READY.filter(s => mastery(p, s.impl!).level === 'dominada').length },
   { id: 'rush', name: 'Contrarreloj', desc: 'Mejor puntuación en contrarreloj', icon: 'clock', tiers: [5, 12, 25], value: p => p.rushBest ?? 0 },
   { id: 'cofres', name: 'Buscatesoros', desc: 'Cofres abiertos', icon: 'chest', tiers: [1, 3, 7], value: p => p.chests.length },
@@ -90,21 +91,24 @@ export function checkRewards(p: Progress): Toast[] {
     if (t > had) { gains.ach[a.id] = t; gains.gems += 10 * t; out.push({ title: `Logro: ${a.name} · ${TIER_NAME[t]}`, text: `${a.desc}: ${a.tiers[t - 1]}. +${10 * t} gemas`, icon: a.icon, tone: ['', 'bronze', 'silver', 'gold'][t] }); }
   }
   const lv = levelOf(xpTotal(p)).level;
-  if (lv > (p.levelSeen ?? 1)) { gains.level = lv; gains.gems += 5; out.push({ title: `¡Nivel ${lv}!`, text: 'Sigues subiendo. +5 gemas', icon: 'star', tone: 'level' }); }
+  if (lv > (p.levelSeen ?? 1)) { gains.level = lv; gains.gems += 5; moment({ kind: 'level', n: lv }); }
   const day = today(); const claimed = p.quests?.[day] ?? [];
   const qs = dailyQuests(day);
   for (const q of qs) if (!claimed.includes(q.id) && q.value(p) >= q.goal) { gains.quests.push(q.id); gains.gems += QUEST_GEMS; out.push({ title: 'Misión cumplida', text: `${q.text}. +${QUEST_GEMS} gemas`, icon: 'target', tone: 'quest' }); }
   const allNow = qs.every(q => claimed.includes(q.id) || gains.quests.includes(q.id));
   const allBefore = qs.every(q => claimed.includes(q.id));
-  if (allNow && !allBefore) { gains.gems += ALL_QUESTS_BONUS; out.push({ title: '¡Todas las misiones del día!', text: `Cofre diario: +${ALL_QUESTS_BONUS} gemas`, icon: 'chest', tone: 'gold' }); }
+  if (allNow && !allBefore) out.push({ title: '¡Misiones completas!', text: 'Tu cofre del día está listo', icon: 'chest', tone: 'gold' });
   const st = streak(p); if (st > (p.bestStreak ?? 0)) gains.bestStreak = st;
-  if (out.length || gains.bestStreak) {
+  const streakDay = activeDays(p).has(day) && p.streakSeen !== day && p.settings.streaks;
+  if (streakDay) moment({ kind: 'streak', n: st });
+  if (out.length || gains.bestStreak || gains.level || streakDay) {
     update(pp => {
       pp.gems = (pp.gems ?? 0) + gains.gems;
       pp.achievements = { ...(pp.achievements ?? {}), ...gains.ach };
       if (gains.level) pp.levelSeen = gains.level;
       if (gains.quests.length) pp.quests = { ...(pp.quests ?? {}), [day]: [...claimed, ...gains.quests] };
       if (gains.bestStreak) pp.bestStreak = gains.bestStreak;
+      if (streakDay) pp.streakSeen = day;
     });
   }
   return out;
@@ -138,3 +142,37 @@ export function comboHit(ok: boolean, hints: number): number {
 }
 export const resetCombo = () => { combo = 0; };
 export const comboNow = () => combo;
+
+// ---------- Momentos grandes (pantalla completa, sobrios) ----------
+export interface Moment { kind: 'level' | 'streak' | 'chest' | 'unit'; n: number }
+export function moment(m: Moment) { try { window.dispatchEvent(new CustomEvent('sa-moment', { detail: m })); } catch { /* noop */ } }
+
+// ---------- Cofre diario ----------
+export function dailyChestState(p: Progress, day = today()): 'locked' | 'ready' | 'open' {
+  if ((p.dailyChests ?? []).includes(day)) return 'open';
+  const claimed = p.quests?.[day] ?? [];
+  return dailyQuests(day).every(q => claimed.includes(q.id)) ? 'ready' : 'locked';
+}
+/** Abre el cofre del día: devuelve las gemas ganadas (0 si no procede). */
+export function openDailyChest(): number {
+  const p = getProgress(), day = today();
+  if (dailyChestState(p, day) !== 'ready') return 0;
+  update(pp => { pp.dailyChests = [...(pp.dailyChests ?? []), day]; pp.gems = (pp.gems ?? 0) + ALL_QUESTS_BONUS; });
+  return ALL_QUESTS_BONUS;
+}
+
+// ---------- Semanas (liga contigo mismo) ----------
+/** Las 7 fechas (lunes→domingo) de la semana actual desplazada `back` semanas. */
+export function weekDays(back = 0): string[] {
+  const d = new Date(); const dow = (d.getDay() + 6) % 7; d.setDate(d.getDate() - dow - 7 * back);
+  return Array.from({ length: 7 }, (_, i) => { const x = new Date(d); x.setDate(d.getDate() + i); return dayKey(x.getTime()); });
+}
+export const weekXp = (p: Progress, back = 0) => weekDays(back).map(d => xpOn(p, d));
+/** Mejor semana registrada (hasta 26 semanas atrás) */
+export function bestWeek(p: Progress): number { let b = 0; for (let k = 1; k <= 26; k++) b = Math.max(b, weekXp(p, k).reduce((a, x) => a + x, 0)); return b; }
+
+/** Lección perfecta: +10 XP extra */
+export function awardPerfect() {
+  const day = today();
+  update(pp => { pp.perfect = (pp.perfect ?? 0) + 1; pp.bonusXp = { ...(pp.bonusXp ?? {}), [day]: (pp.bonusXp?.[day] ?? 0) + 10 }; });
+}
