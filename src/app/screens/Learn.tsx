@@ -65,12 +65,12 @@ export function Home() {
               </div>
               <div className="path">
                 <PathRoad deps={`${u.n}-${items.map(s => nodeKind(p, s)).join()}-${claimed}`} />
-                {items.map(s => {
+                {items.map((s, idx) => {
                   const k = nodeKind(p, s); const i = row++;
                   const isNext = s.id === next;
                   const m = s.impl ? mastery(p, s.impl) : null;
-                  return (
-                    <div className="prow" key={s.id} style={{ ['--off' as never]: `${OFF[i % 8]}px` }}>
+                  const node = (
+                    <div className="prow" style={{ ['--off' as never]: `${OFF[i % 8]}px` }}>
                       <div className="pnode-wrap">
                         {isNext && open !== s.id && <span className="pnode-tip">Empezar</span>}
                         <button className={`pnode k-${k}${isNext ? ' is-next' : ''}${k !== 'locked' && !seen.has(s.id) ? ' just' : ''}`} onClick={() => setOpen(open === s.id ? null : s.id)} aria-label={`${s.name}${k === 'locked' ? ', bloqueada' : k === 'done' ? ', completada' : k === 'mastered' ? ', dominada' : ''}`} aria-expanded={open === s.id}>
@@ -79,10 +79,38 @@ export function Home() {
                         </button>
                         {open === s.id && <NodePop s={s} k={k} isNext={isNext} />}
                       </div>
-                      {i === 1 && <div className={`path-mascot ${OFF[1] < 0 ? 'right' : 'left'}`}>{FRIEND_BY_UNIT[u.n] === 'tesela' ? <Tesela mood={allDone ? 'happy' : 'idle'} size={112} /> : <Friend kind={FRIEND_BY_UNIT[u.n] as never} size={112} />}</div>}
+                      {i === 1 && <div className={`path-mascot ${OFF[1] < 0 ? 'right' : 'left'}`}><div className="mascot-stage">{FRIEND_BY_UNIT[u.n] === 'tesela' ? <Tesela mood={allDone ? 'happy' : 'idle'} size={112} /> : <Friend kind={FRIEND_BY_UNIT[u.n] as never} size={112} />}</div></div>}
                     </div>
                   );
+                  const unitTechs = items.filter(x => x.impl).map(x => x.impl!);
+                  const practice = idx % 2 === 1 && idx < items.length - 1 && unitTechs.length > 0 ? (() => {
+                    const pi = row++; const id = `pr${u.n}-${idx}`; const ready = items.slice(0, idx + 1).some(x => p.lessons[x.id]?.done);
+                    return (
+                      <div className="prow" key={id} style={{ ['--off' as never]: `${OFF[pi % 8]}px` }}>
+                        <div className="pnode-wrap">
+                          <button className={`pnode k-${ready ? 'open' : 'locked'} pnode-practice`} onClick={() => setOpen(open === id ? null : id)} aria-label="Práctica de la unidad">
+                            <span className="pnode-face" data-pt="" data-done={ready ? '1' : '0'}><Icon d={ready ? I.dumbbell : I.lock} size={34} stroke={2.8} /></span>
+                          </button>
+                          {open === id && <div className="pnode-pop"><b>Práctica</b><p>Repasa lo de esta unidad con ejercicios nuevos.</p><Btn kind="white" big onClick={() => go(`entrenar-u${u.n}`)}>Practicar +10 XP</Btn></div>}
+                        </div>
+                      </div>
+                    );
+                  })() : null;
+                  return <React.Fragment key={s.id}>{node}{practice}</React.Fragment>;
                 })}
+                {items.some(x => x.impl) && (() => {
+                  const ti = row++; const id = `tr${u.n}`;
+                  return (
+                    <div className="prow" key={id} style={{ ['--off' as never]: `${OFF[ti % 8]}px` }}>
+                      <div className="pnode-wrap">
+                        <button className={`pnode k-${allDone ? 'open' : 'locked'} pnode-trophy`} onClick={() => setOpen(open === id ? null : id)} aria-label="Prueba de la unidad">
+                          <span className="pnode-face" data-pt="" data-done={allDone ? '1' : '0'}><Icon d={allDone ? I.trophy : I.lock} size={34} stroke={2.8} /></span>
+                        </button>
+                        {open === id && <div className="pnode-pop"><b>Prueba de unidad</b><p>{allDone ? 'Un sudoku entero que necesita lo de esta unidad.' : 'Completa las lecciones de la unidad para desbloquearla.'}</p>{allDone && <Btn kind="white" big onClick={() => go(`prueba-u${u.n}`)}>Jugar</Btn>}</div>}
+                      </div>
+                    </div>
+                  );
+                })()}
                 {pend.length > 0 && (
                   <div className="prow" style={{ ['--off' as never]: `${OFF[row++ % 8]}px` }}>
                     <div className="pnode-wrap">

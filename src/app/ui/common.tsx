@@ -36,6 +36,8 @@ export const I = {
   speaker: 'M4 9h4l5-4v14l-5-4H4zM16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11',
   mute: 'M4 9h4l5-4v14l-5-4H4zM16 9l5 6M21 9l-5 6',
   music: 'M9 18V6l11-2v12M9 18a3 3 0 1 1-3-3 3 3 0 0 1 3 3zM20 16a3 3 0 1 1-3-3 3 3 0 0 1 3 3z',
+  dumbbell: 'M6 7v10M3 9v6M18 7v10M21 9v6M6 12h12',
+  trophy: 'M8 4h8v5a4 4 0 0 1-8 0zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 21h8M9 17h6v4H9z',
   help: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6M12 17h.01',
 };
 export function Icon({ d, size = 20, title, stroke = 2 }: { d: string; size?: number; title?: string; stroke?: number }) {

@@ -7,9 +7,11 @@ import { RulesLesson, CandidatesLesson } from './screens/BasicsLessons';
 import { Train } from './screens/Train';
 import { Play } from './screens/Play';
 import { ProgressPage, ReviewPage } from './screens/Stats';
-import { SHEET_BY_ID } from '../content/catalog';
+import { SHEET_BY_ID, READY } from '../content/catalog';
+import { UnitTest } from './screens/Play';
+import { Welcome, Placement } from './screens/Welcome';
 import { I, Icon, ConfettiLayer } from './ui/common';
-import { useProgress, update } from './store';
+import { useProgress, update, getProgress } from './store';
 import { Tesela } from './ui/Tutor';
 import type { TechId } from '../engine/step';
 import { TECH_BY_ID } from '../engine/techniques';
@@ -34,9 +36,17 @@ function Screen({ route }: { route: string }) {
     if (id === 'candidates') return <CandidatesLesson />;
     const s = SHEET_BY_ID[id]; if (s?.impl) return <Lesson key={id} sheet={s} />;
   }
+  const um = route.match(/^(entrenar|prueba)-u(\d)$/);
+  if (um) {
+    const n = +um[2];
+    const unitTechs = READY.filter(s => s.unit === n).map(s => s.impl!);
+    if (um[1] === 'entrenar') return <Train key={route} presetTechs={unitTechs} />;
+    return <UnitTest key={route} unit={n} allowed={READY.filter(s => s.unit <= n).map(s => s.impl!)} require={unitTechs} />;
+  }
   if (route.startsWith('entrenar-')) { const t = tail(9) as TechId; if (TECH_BY_ID[t]) return <Train key={t} preset={t} />; }
   switch (route) {
-    case 'inicio': return <Home />;
+    case 'inicio': { const p = getProgress(); if (!p.welcomed && !Object.keys(p.lessons).length && !p.attempts.length) return <Welcome />; return <Home />; }
+    case 'nivel': return <Placement />;
     case 'biblioteca': return <Library />;
     case 'entrenar': return <Train key="free" />;
     case 'sudoku': return <Play key="free" />;
@@ -50,7 +60,7 @@ function Screen({ route }: { route: string }) {
 function App() {
   const route = useRoute();
   const p = useProgress();
-  const focus = route.startsWith('leccion-');
+  const focus = route.startsWith('leccion-') || route === 'nivel';
   const section = route.startsWith('tecnica-') ? 'biblioteca' : route.startsWith('entrenar') ? 'entrenar' : route.startsWith('sudoku') ? 'sudoku' : route;
   useEffect(() => {
     const t = p.settings.theme;

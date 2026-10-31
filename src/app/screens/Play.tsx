@@ -1,5 +1,8 @@
 import React, { useMemo, useState } from 'react';
-import { LEVELS, puzzleForLevel, dailyPuzzle, FullPuzzle } from '../bank';
+import { LEVELS, puzzleForLevel, dailyPuzzle, FullPuzzle, restrictedPuzzle } from '../bank';
+import type { TechId } from '../../engine/step';
+import { UNITS_MAP } from '../../content/catalog';
+import { celebrate } from '../ui/common';
 import { SudokuPlayer } from '../ui/SudokuPlayer';
 import { Icon, I } from '../ui/common';
 import { Tesela } from '../ui/Tutor';
@@ -45,6 +48,27 @@ export function Play({ daily }: { daily?: boolean }) {
           recordAttempt({ tech: cur.hardest ?? 'naked_single', kind: 'full', ok: true, hints: r.hints, errors: r.mistakes, ms: r.ms, variant: '', exId: '' });
         }}
         onNext={daily ? () => go('sudoku') : () => start(lv)} nextLabel={daily ? 'Más sudokus' : 'Otro'} />
+    </div>
+  );
+}
+
+/** Prueba de unidad: sudoku completo que se resuelve con lo aprendido y necesita técnicas de esta unidad. */
+export function UnitTest({ unit, allowed, require }: { unit: number; allowed: TechId[]; require: TechId[] }) {
+  const [n, setN] = useState(0);
+  const r = useMemo(() => restrictedPuzzle(allowed, require), [n]);
+  const u = UNITS_MAP.find(x => x.n === unit)!;
+  return (
+    <div className={`playpage c-${u.color}`}>
+      <div className="train-bar">
+        <button className="ltop-x" onClick={() => go('inicio')} aria-label="Volver"><Icon d={I.back} size={22} stroke={2.6} /></button>
+        <div className="tb-techs"><span className="chip chip-unit">Prueba · {u.title}</span></div>
+      </div>
+      {!r.puzzle ? <div className="empty-state"><Tesela mood="oops" size={110} /><p>No encontré un sudoku para esta prueba.</p></div> : (
+        <SudokuPlayer key={r.puzzle.id + n} initial={stateFromValues(r.puzzle.givens)} givens={r.puzzle.givens.map(x => x > 0)} solution={r.puzzle.solution} allowed={allowed}
+          intro={`Prueba de la unidad ${unit}. Se resuelve solo con lo que ya sabes.`}
+          onComplete={res => { update(pp => { pp.fullSolved++; }); celebrate(); for (const t of res.used.filter(x => require.includes(x))) recordAttempt({ tech: t, kind: 'full', ok: true, hints: res.hints, errors: res.mistakes, ms: res.ms, variant: '', exId: '' }); }}
+          onNext={() => setN(x => x + 1)} nextLabel="Otra prueba" />
+      )}
     </div>
   );
 }

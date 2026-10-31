@@ -18,9 +18,9 @@ function loadCfg(): Cfg {
   return { techs: ['x_wing'], task: 'deduce', difficulty: 0, cands: true, hints: true, length: 'short' };
 }
 
-export function Train({ preset }: { preset?: TechId }) {
-  const [cfg, setCfg] = useState<Cfg>(() => { const c = loadCfg(); return preset ? { ...c, techs: [preset], length: 'short' } : c; });
-  const [running, setRunning] = useState(!!preset);
+export function Train({ preset, presetTechs }: { preset?: TechId; presetTechs?: TechId[] }) {
+  const [cfg, setCfg] = useState<Cfg>(() => { const c = loadCfg(); return preset ? { ...c, techs: [preset], length: 'short' } : presetTechs ? { ...c, techs: presetTechs, length: 'short', task: 'deduce' } : c; });
+  const [running, setRunning] = useState(!!preset || !!presetTechs);
   const [ex, setEx] = useState<LiveExercise | null>(null);
   const [full, setFull] = useState<FullPuzzle | null>(null);
   const [reason, setReason] = useState<string | null>(null);

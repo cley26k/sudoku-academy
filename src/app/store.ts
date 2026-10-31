@@ -17,6 +17,7 @@ export interface Progress {
   settings: { streaks: boolean; theme: 'system' | 'light' | 'dark'; sound: boolean; music: boolean };
   fullSolved: number;
   chests: number[];
+  welcomed?: boolean;
 }
 const KEY = 'sudoku-academy/v1';
 const fresh = (): Progress => ({ v: 1, lessons: {}, attempts: [], mistakes: [], sessions: [], daily: {}, settings: { streaks: true, theme: 'system', sound: true, music: false }, fullSolved: 0, chests: [] });

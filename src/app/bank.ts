@@ -113,8 +113,8 @@ function fromBank(i: number, seed: number, h: TechId | null, u: TechId[]): FullP
 export interface RestrictedResult { puzzle: FullPuzzle | null; reason?: string; checked: number }
 /** Sudoku que se resuelve EXCLUSIVAMENTE con las técnicas permitidas (singles siempre incluidos)
  *  y que necesita al menos una de las técnicas no triviales elegidas. */
-export function restrictedPuzzle(allowed: TechId[]): RestrictedResult {
-  const nonSingles = allowed.filter(t => !SINGLES.includes(t));
+export function restrictedPuzzle(allowed: TechId[], requireAny?: TechId[]): RestrictedResult {
+  const nonSingles = (requireAny ?? allowed).filter(t => !SINGLES.includes(t));
   let checked = 0;
   const ok = (givens: number[]) => {
     checked++;

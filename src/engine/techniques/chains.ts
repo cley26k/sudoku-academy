@@ -41,7 +41,9 @@ function chainFrames(chain: Node[], elims: CD[], conclusion: string): { frames: 
       cands: [...all, ...tonesTrue], links: links.slice(0, i + 1),
     });
   }
-  frames.push({ text: conclusion, cands: [...all, ...elims.map(e => ({ ...e, tone: 'elim' as const }))], links });
+  const ends = [nc(chain[0]), nc(chain[chain.length - 1])];
+  const rays = elims.flatMap(e => ends.filter(c => c !== e.cell).map(c => ({ from: c, to: e.cell, tone: 'elim' as const })));
+  frames.push({ text: conclusion, cands: [...all, ...elims.map(e => ({ ...e, tone: 'elim' as const }))], links, rays });
   return { frames, links };
 }
 
