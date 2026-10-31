@@ -11,6 +11,7 @@ import { TutorBubble, Mood } from './Tutor';
 import { Btn, I, DigitPad, useFrames, FrameControls, celebrate, CoordHint } from './common';
 import { SudokuPlayer } from './SudokuPlayer';
 import { BottomBar, ExLayout } from './layout';
+import { sfx } from '../sound';
 
 export type Task = 'recognize' | 'deduce' | 'execute';
 export interface RunResult { ok: boolean; hints: number; errors: number; ms: number; note?: string; variant: string }
@@ -57,6 +58,7 @@ export function ExerciseRunner(p: RunnerProps) {
   }
   function onFeedback(f: Feedback) {
     setFb(f);
+    sfx(f.status === 'correct' ? 'correct' : f.status === 'wrong' ? 'wrong' : f.status === 'empty' ? 'tap' : 'partial');
     if (f.status === 'wrong') { setErrors(e => e + 1); if (!firstErr.current) firstErr.current = f.lines.find(l => l.kind === 'error')?.text ?? f.title; }
     if (f.status === 'correct') { const st = f.matched ?? ex.steps[0]; setDone(st); celebrate(); report(true, hint, st.variant); }
   }
@@ -67,12 +69,12 @@ export function ExerciseRunner(p: RunnerProps) {
   function cellClick(cell: number, sub: number) {
     setSel(cell);
     if (done) return;
-    if (task === 'recognize') { if (!ex.state.v[cell]) { setFb(null); setMulti(m => (m.includes(cell) ? m.filter(x => x !== cell) : [...m, cell])); } return; }
+    if (task === 'recognize') { if (!ex.state.v[cell]) { sfx('select'); setFb(null); setMulti(m => (m.includes(cell) ? m.filter(x => x !== cell) : [...m, cell])); } return; }
     if (!placeMode && showC && !ex.state.v[cell] && has(ex.state.c[cell], sub)) toggleMark(cell, sub);
   }
   function toggleMark(cell: number, d: number) {
     if (ex.state.v[cell] || !has(ex.state.c[cell], d) || done) return;
-    setFb(null);
+    setFb(null); sfx('select');
     setMarks(m => (m.some(x => x.cell === cell && x.digit === d) ? m.filter(x => !(x.cell === cell && x.digit === d)) : [...m, { cell, digit: d }]));
   }
   function digit(d: number) {
@@ -88,7 +90,7 @@ export function ExerciseRunner(p: RunnerProps) {
   function nextHint() {
     if (done) return;
     const n = Math.min(5, hint + 1);
-    setHint(n); setFb(null);
+    setHint(n); setFb(null); sfx('hint');
     if (n === 5) { if (!firstErr.current) firstErr.current = 'Viste la solución completa.'; setDemo(ref.frames); report(false, 5, ref.variant); }
   }
 
@@ -98,7 +100,7 @@ export function ExerciseRunner(p: RunnerProps) {
   else if (hint > 0 && hint < 5) overlays.push(ref.hints[hint - 1]);
   if (fb?.status === 'wrong' && !done) overlays.push({ cells: (fb.wrong ?? []).map(w => ({ cell: w.cell, tone: 'target' as const })).concat(task === 'recognize' ? fb.lines.filter(l => l.cell !== undefined).map(l => ({ cell: l.cell!, tone: 'target' as const })) : []) });
 
-  const defaultTitle = task === 'recognize' ? 'Encuentra el patrón' : placeMode ? '¿Qué número va?' : 'Tacha lo que sobra';
+  const defaultTitle = task === 'recognize' ? (impl.action === 'place' ? 'Encuentra la casilla' : 'Encuentra el patrón') : placeMode ? '¿Qué número va?' : 'Tacha lo que sobra';
   const defaultText = task === 'recognize' ? 'Toca las casillas que forman el patrón.' : placeMode ? 'Toca una casilla y elige su número.' : 'Toca los candidatos que se pueden eliminar.';
 
   let mood: Mood = 'idle'; let bubble: React.ReactNode = p.intro ?? defaultText;

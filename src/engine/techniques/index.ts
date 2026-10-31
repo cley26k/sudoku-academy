@@ -15,10 +15,10 @@ export interface TechImpl { id: TechId; name: string; find: (s: State) => Step[]
 
 /** Orden = dificultad creciente. El solver humano siempre intenta la técnica más sencilla primero. */
 export const TECHS: TechImpl[] = [
-  { id: 'naked_single', name: 'Single desnudo', find: findNakedSingles, action: 'place' },
-  { id: 'hidden_single', name: 'Single oculto', find: findHiddenSingles, action: 'place' },
-  { id: 'pointing', name: 'Pointing', find: findPointing, action: 'eliminate' },
-  { id: 'claiming', name: 'Claiming', find: findClaiming, action: 'eliminate' },
+  { id: 'naked_single', name: 'Candidato único', find: findNakedSingles, action: 'place' },
+  { id: 'hidden_single', name: 'Lugar único', find: findHiddenSingles, action: 'place' },
+  { id: 'pointing', name: 'Bloqueo caja-línea', find: findPointing, action: 'eliminate' },
+  { id: 'claiming', name: 'Bloqueo línea-caja', find: findClaiming, action: 'eliminate' },
   { id: 'naked_pair', name: 'Par desnudo', find: s => findNakedSubsets(s, 2), action: 'eliminate' },
   { id: 'hidden_pair', name: 'Par oculto', find: s => findHiddenSubsets(s, 2), action: 'eliminate' },
   { id: 'naked_triple', name: 'Trío desnudo', find: s => findNakedSubsets(s, 3), action: 'eliminate' },

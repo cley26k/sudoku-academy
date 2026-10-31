@@ -1,4 +1,4 @@
-import React, { useMemo, useRef } from 'react';
+import React, { useId, useMemo, useRef } from 'react';
 import type { Overlay, CellTone, CandTone, CD } from '../../engine/step';
 import { rowOf, colOf, boxOf, has, cellName, digitsOf, unitKind, unitIndex } from '../../engine/grid';
 
@@ -20,6 +20,7 @@ export interface BoardProps {
   peerHighlight?: boolean;
   compact?: boolean;
   axes?: boolean;
+  hlDigit?: number;
 }
 
 const S = 100;
@@ -34,24 +35,25 @@ function unitRect(u: number) {
 
 export function Board(p: BoardProps) {
   const ref = useRef<SVGSVGElement>(null);
+  const uid = useId().replace(/:/g, '');
   const merged = useMemo(() => {
     const units: NonNullable<Overlay['units']> = [], cells: NonNullable<Overlay['cells']> = [], cands: NonNullable<Overlay['cands']> = [],
-      links: NonNullable<Overlay['links']> = [], place: CD[] = [], hypo: CD[] = [];
+      links: NonNullable<Overlay['links']> = [], place: CD[] = [], hypo: CD[] = [], rays: NonNullable<Overlay['rays']> = [];
     let digitFocus: number | undefined;
     for (const o of p.overlays ?? []) {
       if (!o) continue;
       units.push(...(o.units ?? [])); cells.push(...(o.cells ?? [])); cands.push(...(o.cands ?? []));
-      links.push(...(o.links ?? [])); place.push(...(o.place ?? [])); hypo.push(...(o.hypo ?? []));
+      links.push(...(o.links ?? [])); place.push(...(o.place ?? [])); hypo.push(...(o.hypo ?? [])); rays.push(...(o.rays ?? []));
       if (o.digitFocus) digitFocus = o.digitFocus;
     }
     const cellTone = new Map<number, CellTone>(); cells.forEach(c => cellTone.set(c.cell, c.tone));
     const candTone = new Map<number, CandTone>(); cands.forEach(c => candTone.set(c.cell * 10 + c.digit, c.tone));
     (p.marks ?? []).forEach(m => { if (!candTone.has(m.cell * 10 + m.digit) || candTone.get(m.cell * 10 + m.digit) === 'dim') candTone.set(m.cell * 10 + m.digit, 'mark'); });
-    return { units, cellTone, candTone, links, place, hypo, digitFocus };
+    return { units, cellTone, candTone, links, place, hypo, digitFocus, rays };
   }, [p.overlays, p.marks]);
 
   const sel = p.selected ?? null;
-  const selVal = sel !== null ? p.values[sel] : 0;
+  const selVal = sel !== null && p.values[sel] ? p.values[sel] : p.hlDigit ?? 0;
   const multi = new Set(p.multi ?? []);
   const errors = new Set(p.errors ?? []);
   const showC = p.showCands !== false;
@@ -117,6 +119,17 @@ export function Board(p: BoardProps) {
         {merged.links.map((l, i) => {
           const a = candXY(l.a.cell, l.a.digit), b = candXY(l.b.cell, l.b.digit);
           return <line key={'l' + i} x1={a.x} y1={a.y} x2={b.x} y2={b.y} className={`b-link ${l.kind}`} />;
+        })}
+        {/* Flechas: quién bloquea a quién */}
+        <defs>
+          <marker id={`ab${uid}`} viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 L10 5 L0 10 z" className="b-arrow-head" /></marker>
+          <marker id={`ae${uid}`} viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 L10 5 L0 10 z" className="b-arrow-head elim" /></marker>
+        </defs>
+        {merged.rays.map((r, i) => {
+          const x1 = colOf(r.from) * S + 50, y1 = rowOf(r.from) * S + 50, x2 = colOf(r.to) * S + 50, y2 = rowOf(r.to) * S + 50;
+          const len = Math.hypot(x2 - x1, y2 - y1) || 1, k = Math.max(0, (len - 34) / len), k0 = 28 / len;
+          return <line key={`r${i}-${r.from}-${r.to}`} x1={x1 + (x2 - x1) * k0} y1={y1 + (y2 - y1) * k0} x2={x1 + (x2 - x1) * k} y2={y1 + (y2 - y1) * k}
+            className={`b-ray${r.tone === 'elim' ? ' elim' : ''}`} style={{ animationDelay: `${Math.min(i, 8) * 70}ms` }} markerEnd={`url(#${r.tone === 'elim' ? 'ae' : 'ab'}${uid})`} />;
         })}
         {/* Valores y candidatos */}
         {Array.from({ length: 81 }, (_, c) => {

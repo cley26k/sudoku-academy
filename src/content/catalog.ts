@@ -12,6 +12,7 @@ export interface Sheet {
   errors: { text: string; why: string }[];
   mastery: string; questions: Question[];
   intro?: string; findPrompt?: string; variants?: Record<string, string>;
+  analogy?: string; terms?: string[];
 }
 export interface Unit { n: number; title: string; blurb: string; color: string }
 
@@ -49,7 +50,7 @@ export const SHEETS: Sheet[] = [
     mastery: 'Calcular correctamente los candidatos de varias casillas.', questions: [],
   },
   {
-    id: 'naked_single', impl: 'naked_single', status: 'ready', name: 'Single desnudo', aliases: ['Naked Single', 'Sole candidate'], abbr: 'SD', level: 'Fundamentos', family: 'Singles', unit: 1, difficulty: 1,
+    id: 'naked_single', impl: 'naked_single', status: 'ready', name: 'Candidato único', aliases: ['Naked Single', 'Single desnudo'], abbr: 'CU', level: 'Fundamentos', family: 'Singles', unit: 1, difficulty: 1,
     prereqs: ['candidates'], related: ['hidden_single', 'naked_pair'],
     intuition: 'Una casilla en la que solo cabe un número.',
     principle: 'Si los otros ocho dígitos ya aparecen entre la fila, la columna y la caja de una casilla (o se descartaron antes), el dígito restante es obligatorio.',
@@ -63,18 +64,18 @@ export const SHEETS: Sheet[] = [
     findPrompt: 'Encuentra una casilla con una sola posibilidad.',
     variants: { cell: 'Casilla' },
     questions: [
-      { q: '¿Qué hace falta para que una casilla sea un single desnudo?', options: ['Que el número no aparezca en su fila', 'Que los otros ocho números queden descartados', 'Que sea la última casilla vacía de su caja'], answer: 1, why: 'Solo cuando los otros ocho están descartados el número restante es inevitable.' },
-      { q: 'Una casilla ve los números 1, 2, 3, 5, 6, 7 y 9. ¿Es un single desnudo?', options: ['Sí, es el 4', 'No: aún admite 4 y 8', 'Sí, es el 8'], answer: 1, why: 'Solo hay siete números descartados; quedan dos candidatos.' },
+      { q: '¿Qué hace falta para que una casilla sea un candidato único?', options: ['Que el número no aparezca en su fila', 'Que los otros ocho números queden descartados', 'Que sea la última casilla vacía de su caja'], answer: 1, why: 'Solo cuando los otros ocho están descartados el número restante es inevitable.' },
+      { q: 'Una casilla ve los números 1, 2, 3, 5, 6, 7 y 9. ¿Es un candidato único?', options: ['Sí, es el 4', 'No: aún admite 4 y 8', 'Sí, es el 8'], answer: 1, why: 'Solo hay siete números descartados; quedan dos candidatos.' },
     ],
   },
   {
-    id: 'hidden_single', impl: 'hidden_single', status: 'ready', name: 'Single oculto', aliases: ['Hidden Single', 'Escaneo', 'Cross-hatching'], abbr: 'SO', level: 'Fundamentos', family: 'Singles', unit: 1, difficulty: 1,
+    id: 'hidden_single', impl: 'hidden_single', status: 'ready', name: 'Lugar único', aliases: ['Hidden Single', 'Single oculto', 'Escaneo'], abbr: 'LU', level: 'Fundamentos', family: 'Singles', unit: 1, difficulty: 1,
     prereqs: ['candidates'], related: ['naked_single', 'hidden_pair', 'pointing'],
     intuition: 'Un número que, dentro de una fila, columna o caja, solo tiene un sitio posible.',
     principle: 'Cada unidad debe contener cada número. Si todas las casillas de la unidad menos una están bloqueadas para un número, ese número va en la que queda, aunque la casilla tenga otros candidatos.',
     conditions: ['El número no está colocado todavía en la unidad.', 'Solo una casilla vacía de la unidad lo admite como candidato.'],
     errors: [
-      { text: 'Confundirlo con un single desnudo', why: 'La casilla puede tener varios candidatos; lo único que importa es que el número no tiene otro sitio en esa unidad.' },
+      { text: 'Confundirlo con un candidato único', why: 'La casilla puede tener varios candidatos; lo único que importa es que el número no tiene otro sitio en esa unidad.' },
       { text: 'Olvidar casillas bloqueadas por la caja', why: 'Una línea que pasa por una caja puede quedar cubierta por un número de otra línea.' },
     ],
     mastery: MASTERY,
@@ -83,11 +84,11 @@ export const SHEETS: Sheet[] = [
     variants: { box: 'En una caja', row: 'En una fila', col: 'En una columna' },
     questions: [
       { q: 'En una caja, el 7 solo puede ir en una casilla que también admite 2 y 5. ¿Qué número va allí?', options: ['No se puede saber', 'El 7', 'El 2 o el 5'], answer: 1, why: 'La caja necesita un 7 y no tiene otro sitio. Los demás candidatos de la casilla no importan.' },
-      { q: '¿Qué unidades pueden producir un single oculto?', options: ['Solo las cajas', 'Filas, columnas y cajas', 'Solo filas y columnas'], answer: 1, why: 'Cualquier unidad debe contener todos los números.' },
+      { q: '¿Qué unidades pueden producir un lugar único?', options: ['Solo las cajas', 'Filas, columnas y cajas', 'Solo filas y columnas'], answer: 1, why: 'Cualquier unidad debe contener todos los números.' },
     ],
   },
   {
-    id: 'pointing', impl: 'pointing', status: 'ready', name: 'Pointing', aliases: ['Candidatos bloqueados tipo 1', 'Locked Candidates (Pointing)', 'Pares/tríos apuntadores'], abbr: 'PT', level: 'Fundamentos', family: 'Intersecciones', unit: 2, difficulty: 2,
+    id: 'pointing', impl: 'pointing', status: 'ready', name: 'Bloqueo caja-línea', aliases: ['Pointing', 'Candidatos bloqueados tipo 1'], abbr: 'CL', level: 'Fundamentos', family: 'Intersecciones', unit: 2, difficulty: 2,
     prereqs: ['hidden_single'], related: ['claiming', 'x_wing'],
     intuition: 'Si dentro de una caja un número solo puede estar en una fila (o columna), esa fila recibe su número dentro de la caja.',
     principle: 'La caja necesita el número. Todas sus posiciones están en la misma línea, así que el número de esa línea quedará dentro de la caja. Ninguna otra casilla de la línea, fuera de la caja, puede tenerlo.',
@@ -105,12 +106,12 @@ export const SHEETS: Sheet[] = [
     ],
   },
   {
-    id: 'claiming', impl: 'claiming', status: 'ready', name: 'Claiming', aliases: ['Candidatos bloqueados tipo 2', 'Box/Line Reduction', 'Locked Candidates (Claiming)'], abbr: 'CL', level: 'Fundamentos', family: 'Intersecciones', unit: 2, difficulty: 2,
+    id: 'claiming', impl: 'claiming', status: 'ready', name: 'Bloqueo línea-caja', aliases: ['Claiming', 'Box/Line Reduction', 'Candidatos bloqueados tipo 2'], abbr: 'LC', level: 'Fundamentos', family: 'Intersecciones', unit: 2, difficulty: 2,
     prereqs: ['pointing'], related: ['pointing'],
     intuition: 'Si dentro de una fila (o columna) un número solo puede estar en una caja, la caja recibe ese número en esa línea.',
     principle: 'La línea necesita el número y solo puede ponerlo en casillas de una caja. Así, el número de la caja estará en esa línea y el resto de la caja no puede tenerlo.',
     conditions: ['Dentro de una fila o columna, todas las posiciones del número están en la misma caja.', 'Otra casilla de la caja, fuera de la línea, tiene ese candidato.'],
-    errors: [{ text: 'Confundir la dirección con pointing', why: 'En claiming se parte de la línea y se elimina en la caja; en pointing, al revés.' }],
+    errors: [{ text: 'Confundir la dirección', why: 'En el bloqueo línea-caja se parte de la línea y se elimina en la caja; en el caja-línea, al revés.' }],
     mastery: MASTERY,
     intro: 'Es la misma intersección vista desde el otro lado: ahora manda la línea.',
     findPrompt: 'Busca una línea donde un número solo pueda ir dentro de una caja.',
@@ -405,6 +406,59 @@ export const SHEETS: Sheet[] = [
 function pending(id: string, name: string, aliases: string[], family: string, unit: number, level: Sheet['level'], prereqs: string[], intuition: string): Sheet[] {
   return [{ id, status: 'pending', name, aliases, abbr: name.slice(0, 2).toUpperCase(), level, family, unit, difficulty: 5, prereqs, related: prereqs, intuition, principle: intuition, conditions: [], errors: [], mastery: '', questions: [] }];
 }
+
+const ANALOGY: Record<string, string> = {
+  rules: 'Cada fila, columna y caja es un equipo de 9 jugadores con dorsales del 1 al 9: nunca puede haber dos con el mismo dorsal.',
+  candidates: 'Los candidatos son la lista de «quizás» de cada casilla. Resolver es ir tachando quizás hasta que solo queda uno.',
+  naked_single: 'Como la última pieza de un puzle: si todo lo de alrededor ya está puesto, solo encaja una.',
+  hidden_single: 'Como buscar aparcamiento para el coche nº 7 en una calle: todas las plazas tienen un cartel de «prohibido» menos una. Ahí va.',
+  pointing: 'Como una reserva de tren: si tu asiento está en este vagón, no puede estar en ningún otro vagón del mismo tren.',
+  claiming: 'La misma reserva vista al revés: si la fila guarda su número dentro de una caja, el resto de la caja ya no lo necesita.',
+  naked_pair: 'Dos niños que solo quieren chocolate o fresa, y quedan justo esos dos helados: ya nadie más de la mesa puede pedir esos sabores.',
+  hidden_pair: 'Dos invitados VIP que solo caben en dos sillas concretas: esas sillas son suyas, y lo que hubiera apuntado en ellas sobra.',
+  naked_triple: 'Igual que la pareja, pero con tres niños y tres sabores: se los reparten entre ellos.',
+  hidden_triple: 'Tres invitados VIP, tres sillas reservadas.',
+  naked_quad: 'Cuatro niños, cuatro sabores: nadie más puede pedirlos.',
+  hidden_quad: 'Cuatro invitados VIP con sus cuatro sillas.',
+  x_wing: 'Dos parejas de baile y solo dos pistas: cada pista se la queda una pareja. En esas pistas ya no puede bailar nadie más.',
+  swordfish: 'Tres parejas y tres pistas: todas las pistas quedan ocupadas.',
+  jellyfish: 'Cuatro parejas, cuatro pistas.',
+  finned_fish: 'Un X-Wing con un «pero»: la aleta. Si la aleta no cuenta, funciona el X-Wing; si cuenta, tapa su propia caja. Solo se elimina lo que cae en los dos casos.',
+  y_wing: 'El pivote es un interruptor de dos posiciones: en una enciende la pinza A, en la otra la pinza B. Las dos apuntan a la misma casilla: pase lo que pase, queda bloqueada.',
+  xyz_wing: 'Como el Y-Wing, pero el interruptor tiene una tercera posición que también bloquea: hay que estar a la vista de los tres.',
+  w_wing: 'Dos casillas gemelas {x,y}, lejos una de otra, unidas por un puente de y. No pueden ser y las dos a la vez sin romper el puente, así que al menos una es x.',
+  unique_rect1: 'Si cuatro esquinas pudieran intercambiar sus números sin que nadie lo notara, habría dos soluciones. Los buenos sudokus tienen una sola: la cuarta esquina rompe el empate.',
+  unique_rect_plus: 'El mismo empate imposible, pero el techo tiene extras: alguno de esos extras tiene que ser verdad.',
+  bug1: 'Todo el tablero baila en parejas. La única casilla con tres candidatos es la que rompe la simetría, y decide.',
+  simple_coloring: 'Un juego de verdad o mentira: pinta la cadena con dos colores. Un color dice la verdad y el otro miente.',
+  multi_coloring: 'Dos equipos de verdad o mentira que se vigilan entre sí.',
+  x_chain: 'Fichas de dominó de un solo número: si la primera no está, empuja a la siguiente… hasta que la última sí está.',
+  xy_chain: 'Fichas de dominó hechas con casillas de dos candidatos que se pasan el número.',
+  medusa: 'El coloreado en 3D: la cadena puede saltar de un número a otro dentro de la misma casilla.',
+  aic: 'La cadena universal: mezcla todo lo anterior. Si el primer eslabón miente, el último dice la verdad.',
+};
+const TERMS: Record<string, string[]> = {
+  x_wing: ['base', 'cubierta'], swordfish: ['base', 'cubierta'], jellyfish: ['base', 'cubierta'], finned_fish: ['base', 'cubierta', 'aleta'],
+  y_wing: ['pivote', 'pinza'], xyz_wing: ['pivote', 'pinza'], w_wing: ['enlace fuerte', 'enlace débil'],
+  unique_rect1: ['patrón mortal'], unique_rect_plus: ['patrón mortal', 'suelo', 'techo'], bug1: ['patrón mortal'],
+  simple_coloring: ['enlace fuerte'], multi_coloring: ['enlace fuerte'], x_chain: ['enlace fuerte', 'enlace débil'], xy_chain: ['casilla bivalor'],
+  medusa: ['enlace fuerte', 'casilla bivalor'], aic: ['enlace fuerte', 'enlace débil'], naked_pair: ['unidad'], hidden_single: ['unidad'], pointing: ['unidad'], claiming: ['unidad'],
+};
+export const GLOSSARY: Record<string, string> = {
+  'unidad': 'Una fila, una columna o una caja de 3×3.',
+  'base': 'Las líneas donde el número tiene muy pocos sitios. Es donde se fija el patrón.',
+  'cubierta': 'Las líneas perpendiculares que cubren esos sitios. Ahí se elimina.',
+  'aleta': 'Candidatos de más que estropean un pez perfecto. Siempre en una misma caja.',
+  'pivote': 'La casilla central que ve a las dos pinzas.',
+  'pinza': 'Cada una de las casillas que el pivote obliga.',
+  'enlace fuerte': 'Si uno no es verdad, el otro sí. Pasa cuando un número tiene solo dos sitios en una unidad, o una casilla solo tiene dos candidatos.',
+  'enlace débil': 'Si uno es verdad, el otro no. Pasa entre candidatos que se ven.',
+  'patrón mortal': 'Cuatro esquinas que podrían intercambiarse: daría dos soluciones, cosa imposible.',
+  'suelo': 'Las dos esquinas del rectángulo que solo tienen los dos números.',
+  'techo': 'Las otras dos esquinas, con algo más.',
+  'casilla bivalor': 'Una casilla con exactamente dos candidatos.',
+};
+for (const s of SHEETS) { s.analogy = ANALOGY[s.id]; s.terms = TERMS[s.id]; }
 
 export const SHEET_BY_ID: Record<string, Sheet> = Object.fromEntries(SHEETS.map(s => [s.id, s]));
 export const sheetForTech = (t: TechId) => SHEETS.find(s => s.impl === t)!;

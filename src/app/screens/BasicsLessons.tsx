@@ -8,6 +8,7 @@ import { Btn, DigitPad, useFrames, FrameControls, celebrate, CoordHint } from '.
 import { LessonTop, BottomBar, ExLayout } from '../ui/layout';
 import { completeLesson } from '../store';
 import { go } from '../router';
+import { sfx } from '../sound';
 
 const EMPTY = new Array(81).fill(0);
 
@@ -38,7 +39,7 @@ export function RulesLesson() {
   const progress = stage === 'learn' ? .1 + (ctl.i / frames.length) * .25 : stage === 'tap' ? .4 + (t / tasks.length) * .3 : stage === 'fill' ? .75 : 1;
   const top = <LessonTop progress={progress} onClose={() => go('inicio')} />;
   const bad = conflicts(v);
-  useEffect(() => { if (stage === 'done') { completeLesson('rules'); celebrate(); } }, [stage]);
+  useEffect(() => { if (stage === 'done') { completeLesson('rules'); celebrate(); sfx('complete'); } }, [stage]);
 
   if (stage === 'learn') return (
     <div className="runner">{top}
@@ -53,7 +54,7 @@ export function RulesLesson() {
       <div className="runner">{top}
         <ExLayout title={task.q} tutor={<TutorBubble mood={tapFb ? (tapFb.ok ? 'happy' : 'oops') : 'think'}>{tapFb ? (tapFb.ok ? '¡Eso es!' : `Esa es ${cellName(tapFb.cell)}: fila ${rowOf(tapFb.cell) + 1}, columna ${colOf(tapFb.cell) + 1}.`) : 'Mira los números del borde.'}</TutorBubble>}
           board={<Board values={sol} cands={EMPTY} givens={sol.map(() => true)} selected={tapFb?.cell ?? null} overlays={tapFb ? [task.show] : []}
-            onCell={c => { if (!tapFb?.ok) setTapFb({ ok: task.ok(c), cell: c }); }} />}
+            onCell={c => { if (!tapFb?.ok) { const ok = task.ok(c); sfx(ok ? 'correct' : 'wrong'); setTapFb({ ok, cell: c }); } }} />}
           below={<div className="board-tools"><CoordHint /></div>} />
         {tapFb?.ok ? <BottomBar tone="ok" title="¡Correcto!" right={<Btn kind="success" big onClick={() => { setTapFb(null); if (t + 1 < tasks.length) setT(t + 1); else setStage('fill'); }}>Continuar</Btn>} />
           : tapFb ? <BottomBar tone="bad" title="Casi" text="Prueba otra vez." right={<Btn kind="danger" big onClick={() => setTapFb(null)}>Seguir</Btn>} />
@@ -65,9 +66,9 @@ export function RulesLesson() {
     if (sel === null || !holes.includes(sel)) return;
     const nv = v.slice(); nv[sel] = d; setV(nv);
     const peer = PEERS[sel].find(p => nv[p] === d);
-    if (peer !== undefined) { const u = CELL_UNITS[sel].find(uu => UNITS[uu].includes(peer))!; setMsg({ t: `El ${d} ya está en la ${unitName(u)}.`, mood: 'oops', bad: true }); }
+    if (peer !== undefined) { const u = CELL_UNITS[sel].find(uu => UNITS[uu].includes(peer))!; setMsg({ t: `El ${d} ya está en la ${unitName(u)}.`, mood: 'oops', bad: true }); sfx('wrong'); }
     else if (nv.every((x, i) => !holes.includes(i) || x === sol[i])) setStage('done');
-    else { setMsg({ t: '¡Bien!', mood: 'happy' }); const nx = holes.find(h => !nv[h]); if (nx !== undefined) setSel(nx); }
+    else { sfx('place'); setMsg({ t: '¡Bien!', mood: 'happy' }); const nx = holes.find(h => !nv[h]); if (nx !== undefined) setSel(nx); }
   }
   if (stage === 'fill') return (
     <div className="runner">{top}
@@ -98,7 +99,7 @@ export function CandidatesLesson() {
   const [shown, setShown] = useState<number[]>(new Array(81).fill(0));
   const done = k >= targets.length;
   const cell = targets[Math.min(k, targets.length - 1)];
-  useEffect(() => { if (done) { completeLesson('candidates'); celebrate(); } }, [done]);
+  useEffect(() => { if (done) { completeLesson('candidates'); celebrate(); sfx('complete'); } }, [done]);
   const top = <LessonTop progress={(k + (res?.ok ? 1 : 0)) / targets.length} onClose={() => go('inicio')} />;
 
   function check() {
@@ -107,7 +108,7 @@ export function CandidatesLesson() {
     let line = '';
     if (extra.length) { const d = extra[0]; const s = PEERS[cell].find(p => g[p] === d)!; const u = CELL_UNITS[cell].find(uu => UNITS[uu].includes(s))!; line = `El ${d} no: ya está en su ${unitName(u).split(' ')[0]}.`; }
     else if (missing.length) line = `Te falta ${missing.length === 1 ? 'un número' : missing.length + ' números'}.`;
-    setRes({ ok: picked === want, line });
+    setRes({ ok: picked === want, line }); sfx(picked === want ? 'correct' : 'wrong');
     if (picked === want) { const s = shown.slice(); s[cell] = want; setShown(s); }
   }
   if (done) return (
@@ -126,7 +127,7 @@ export function CandidatesLesson() {
       <ExLayout title={`¿Qué números caben en ${cellName(cell)}?`}
         tutor={<TutorBubble mood={res ? (res.ok ? 'happy' : 'oops') : 'think'}>{res?.ok ? `¡Sí! ${joinEs(digitsOf(bc[cell]))}.` : 'Elige los que NO están en su fila, columna ni caja.'}</TutorBubble>}
         board={<Board values={g} cands={cands} givens={g.map(x => x > 0)} overlays={[overlay]} selected={cell} onKey={kk => /^[1-9]$/.test(kk) && !res?.ok && setPicked(p => p ^ (1 << +kk))} />}
-        below={<><DigitPad onDigit={d => { if (!res?.ok) { setPicked(p => p ^ (1 << d)); setRes(null); } }} active={picked || undefined} /><div className="board-tools"><CoordHint /></div></>} />
+        below={<><DigitPad onDigit={d => { if (!res?.ok) { setPicked(p => p ^ (1 << d)); setRes(null); } }} active={picked || undefined} pick /><div className="board-tools"><CoordHint /></div></>} />
       {res?.ok ? <BottomBar tone="ok" title="¡Correcto!" right={<Btn kind="success" big onClick={() => { setK(k + 1); setPicked(0); setRes(null); }}>Continuar</Btn>} />
         : res ? <BottomBar tone="bad" title="Casi" text={res.line} right={<Btn kind="danger" big onClick={() => setRes(null)}>Seguir</Btn>} />
           : <BottomBar right={<Btn kind="primary" big onClick={check} disabled={!picked}>Comprobar</Btn>} />}

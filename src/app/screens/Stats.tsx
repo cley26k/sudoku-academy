@@ -7,6 +7,7 @@ import { ExerciseRunner, Task } from '../ui/ExerciseRunner';
 import { go } from '../router';
 import { Tesela } from '../ui/Tutor';
 import { LessonTop } from '../ui/layout';
+import { setMusic } from '../sound';
 
 function Bars({ data, labels }: { data: (number | null)[]; labels: string[] }) {
   return (
@@ -52,6 +53,8 @@ export function ProgressPage() {
       <details className="settings">
         <summary><Icon d={I.gear} size={18} /> Ajustes</summary>
         <Toggle id="set-streak" on={p.settings.streaks} onChange={v => update(pp => { pp.settings.streaks = v; })} label="Mostrar rachas" />
+        <Toggle id="set-sound" on={p.settings.sound} onChange={v => update(pp => { pp.settings.sound = v; })} label="Efectos de sonido" />
+        <Toggle id="set-music" on={p.settings.music} onChange={v => { update(pp => { pp.settings.music = v; }); setMusic(v); }} label="Música de fondo" />
         <p className="small muted">El dominio cuenta precisión sin pistas, variedad de casos y días distintos, no solo cantidad.</p>
         <div className="row-actions">
           <Btn onClick={() => { const t = exportProgress(); setIo(t); navigator.clipboard?.writeText(t).then(() => setIoMsg('Copiado.'), () => setIoMsg('Copia el texto de abajo.')); }}>Exportar</Btn>

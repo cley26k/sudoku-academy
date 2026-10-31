@@ -33,6 +33,9 @@ export const I = {
   crown: 'M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z',
   gear: 'M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z',
   dots: 'M5 12h.01M12 12h.01M19 12h.01',
+  speaker: 'M4 9h4l5-4v14l-5-4H4zM16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11',
+  mute: 'M4 9h4l5-4v14l-5-4H4zM16 9l5 6M21 9l-5 6',
+  music: 'M9 18V6l11-2v12M9 18a3 3 0 1 1-3-3 3 3 0 0 1 3 3zM20 16a3 3 0 1 1-3-3 3 3 0 0 1 3 3z',
   help: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6M12 17h.01',
 };
 export function Icon({ d, size = 20, title, stroke = 2 }: { d: string; size?: number; title?: string; stroke?: number }) {
@@ -155,8 +158,8 @@ export function FrameControls({ ctl }: { ctl: FramesCtl }) {
   );
 }
 
-export function DigitPad({ onDigit, onErase, counts, disabled, active, allowed }: {
-  onDigit: (d: number) => void; onErase?: () => void; counts?: number[]; disabled?: boolean; active?: number; allowed?: number;
+export function DigitPad({ onDigit, onErase, counts, disabled, active, allowed, pick, hl }: {
+  onDigit: (d: number) => void; onErase?: () => void; counts?: number[]; disabled?: boolean; active?: number; allowed?: number; pick?: boolean; hl?: number;
 }) {
   return (
     <div className="pad">
@@ -164,7 +167,7 @@ export function DigitPad({ onDigit, onErase, counts, disabled, active, allowed }
         {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(d => {
           const off = disabled || (counts ? counts[d] >= 9 : false) || (allowed !== undefined && !(allowed & (1 << d)));
           return (
-            <button key={d} onClick={() => onDigit(d)} disabled={off} className={active && active & (1 << d) ? 'picked' : ''} aria-pressed={active ? !!(active & (1 << d)) : undefined} aria-label={`Número ${d}`}>
+            <button key={d} onClick={() => onDigit(d)} disabled={off} className={`${active && active & (1 << d) ? (pick ? 'chosen' : 'picked') : ''}${hl === d ? ' hl' : ''}`} aria-pressed={active ? !!(active & (1 << d)) : undefined} aria-label={`Número ${d}`}>
               {d}
             </button>
           );

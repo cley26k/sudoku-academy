@@ -41,7 +41,7 @@ export function findYWing(s: State): Step[] {
             { text: `Si el pivote es ${a}, ${cellName(X)} no puede ser ${a}: será ${c}.`, cells: cellsT, hypo: [cd(P, a), cd(X, c)], links: [{ a: cd(P, a), b: cd(X, a), kind: 'weak' }] },
             { text: `Si el pivote es ${b}, ${cellName(Y)} no puede ser ${b}: será ${c}.`, cells: cellsT, hypo: [cd(P, b), cd(Y, c)], links: [{ a: cd(P, b), b: cd(Y, b), kind: 'weak' }] },
             { text: `Pase lo que pase, una de las dos pinzas es ${c}.`, cells: cellsT, cands: [cd(X, c), cd(Y, c)].map(x => ({ ...x, tone: 'confirm' as const })) },
-            { text: `Cualquier casilla que vea a ambas pinzas no puede ser ${c}: se elimina de ${listCells(targets)}.`, cells: [...cellsT, ...targets.map(z => ({ cell: z, tone: 'target' as const }))], cands: [...[cd(X, c), cd(Y, c)].map(x => ({ ...x, tone: 'confirm' as const })), ...elT] },
+            { text: `Cualquier casilla que vea a ambas pinzas no puede ser ${c}: se elimina de ${listCells(targets)}.`, cells: [...cellsT, ...targets.map(z => ({ cell: z, tone: 'target' as const }))], cands: [...[cd(X, c), cd(Y, c)].map(x => ({ ...x, tone: 'confirm' as const })), ...elT], rays: targets.flatMap(z => [{ from: X, to: z, tone: 'elim' as const }, { from: Y, to: z, tone: 'elim' as const }]) },
           ],
           scenarios: [
             { label: `Si ${cellName(P)} = ${a}`, frames: [{ text: `${cellName(P)} = ${a} obliga a ${cellName(X)} = ${c}. Las casillas que ven a ${cellName(X)} pierden el ${c}.`, cells: cellsT, hypo: [cd(P, a), cd(X, c)], cands: PEERS[X].filter(z => !s.v[z] && has(s.c[z], c) && z !== Y).map(z => ({ cell: z, digit: c, tone: (targets.includes(z) ? 'elim' : 'dim') as 'elim' | 'dim' })) }] },

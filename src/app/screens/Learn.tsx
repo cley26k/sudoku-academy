@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { SHEETS, SHEET_BY_ID, UNITS_MAP, Sheet } from '../../content/catalog';
+import { SHEETS, SHEET_BY_ID, UNITS_MAP, Sheet, GLOSSARY } from '../../content/catalog';
 import { useProgress, mastery, lessonUnlocked, nextLesson, streak, LEVEL_LABEL, dayKey, Progress, xpToday, xpTotal, DAILY_GOAL, claimChest } from '../store';
 import { go } from '../router';
 import { Btn, I, Icon, Ring, Meter, useFrames, FrameControls, celebrate } from '../ui/common';
@@ -8,6 +8,7 @@ import { Board } from '../ui/Board';
 import { UnitArt, Chest } from '../ui/art';
 import { lessonExercise } from '../bank';
 import { Friend, FRIEND_BY_UNIT } from '../ui/friends';
+import { sfx } from '../sound';
 
 type NodeKind = 'locked' | 'open' | 'done' | 'mastered' | 'pending';
 function nodeKind(p: Progress, s: Sheet): NodeKind {
@@ -42,6 +43,10 @@ export function Home() {
   const xp = xpToday(p);
   const due = SHEETS.filter(s => s.impl && mastery(p, s.impl).due);
   const openMistakes = p.mistakes.filter(m => !m.resolved).length;
+  // Nodos recién desbloqueados: se animan una vez
+  const openNow = SHEETS.filter(s => s.status !== 'pending' && nodeKind(p, s) !== 'locked').map(s => s.id);
+  const [seen] = useState<Set<string>>(() => { try { return new Set(JSON.parse(localStorage.getItem('sa-seen-open') || '[]')); } catch { return new Set(); } });
+  useEffect(() => { try { localStorage.setItem('sa-seen-open', JSON.stringify(openNow)); } catch { /* noop */ } }, [openNow.join()]);
 
   return (
     <div className="home">
@@ -68,7 +73,7 @@ export function Home() {
                     <div className="prow" key={s.id} style={{ ['--off' as never]: `${OFF[i % 8]}px` }}>
                       <div className="pnode-wrap">
                         {isNext && open !== s.id && <span className="pnode-tip">Empezar</span>}
-                        <button className={`pnode k-${k}${isNext ? ' is-next' : ''}`} onClick={() => setOpen(open === s.id ? null : s.id)} aria-label={`${s.name}${k === 'locked' ? ', bloqueada' : k === 'done' ? ', completada' : k === 'mastered' ? ', dominada' : ''}`} aria-expanded={open === s.id}>
+                        <button className={`pnode k-${k}${isNext ? ' is-next' : ''}${k !== 'locked' && !seen.has(s.id) ? ' just' : ''}`} onClick={() => setOpen(open === s.id ? null : s.id)} aria-label={`${s.name}${k === 'locked' ? ', bloqueada' : k === 'done' ? ', completada' : k === 'mastered' ? ', dominada' : ''}`} aria-expanded={open === s.id}>
                           {isNext && <Ring value={m?.score ?? 0} size={100} />}
                           <span className="pnode-face" data-pt="" data-done={k === 'done' || k === 'mastered' ? '1' : '0'}><Icon d={k === 'locked' ? I.lock : k === 'done' ? I.check : k === 'mastered' ? I.crown : I.star} size={34} stroke={k === 'locked' ? 2.6 : 3} /></span>
                         </button>
@@ -88,7 +93,7 @@ export function Home() {
                 )}
                 {items.length > 0 && (
                   <div className="prow" style={{ ['--off' as never]: `${OFF[row++ % 8]}px` }}>
-                    <button className={`chest-btn${allDone && !claimed ? ' ready' : ''}`} disabled={!allDone || claimed} onClick={() => { claimChest(u.n); celebrate(); }} aria-label={claimed ? 'Cofre abierto' : allDone ? 'Abrir cofre: +25 XP' : 'Cofre: completa la unidad'}>
+                    <button className={`chest-btn${allDone && !claimed ? ' ready' : ''}`} disabled={!allDone || claimed} onClick={() => { claimChest(u.n); celebrate(); sfx('chest'); }} aria-label={claimed ? 'Cofre abierto' : allDone ? 'Abrir cofre: +25 XP' : 'Cofre: completa la unidad'}>
                       <span data-pt="" data-done={allDone ? '1' : '0'} className="chest-pt"><Chest open={claimed} /></span>
                       {allDone && !claimed && <span className="pnode-tip">+25 XP</span>}
                     </button>
@@ -209,7 +214,9 @@ export function SheetPage({ sheet }: { sheet: Sheet }) {
             </div>
           )}
           <div className="sheet-info">
-            <details open><summary>¿Por qué funciona?</summary><p>{sheet.principle}</p></details>
+            {sheet.analogy && <details open><summary>Imagínalo así</summary><p className="analogy">{sheet.analogy}</p></details>}
+            <details><summary>¿Por qué funciona?</summary><p>{sheet.principle}</p></details>
+            {sheet.terms && <details><summary>Palabras clave</summary><dl className="terms">{sheet.terms.map(t => <div key={t}><dt>{t}</dt><dd>{GLOSSARY[t]}</dd></div>)}</dl></details>}
             {sheet.conditions.length > 0 && <details><summary>Condiciones</summary><ul>{sheet.conditions.map((c, i) => <li key={i}>{c}</li>)}</ul></details>}
             {sheet.errors.length > 0 && <details><summary>Errores típicos</summary><ul>{sheet.errors.map((e, i) => <li key={i}><b>{e.text}.</b> {e.why}</li>)}</ul></details>}
             {q && (

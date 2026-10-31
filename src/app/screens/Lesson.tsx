@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { UNITS_MAP } from '../../content/catalog';
+import { UNITS_MAP, GLOSSARY } from '../../content/catalog';
 import type { Sheet } from '../../content/catalog';
 import { lessonExercise } from '../bank';
 import { ExerciseRunner, RunResult } from '../ui/ExerciseRunner';
@@ -13,6 +13,7 @@ import type { LiveExercise } from '../../engine/exercise';
 import type { Overlay } from '../../engine/step';
 import { go } from '../router';
 import { Friend, FRIEND_BY_UNIT } from '../ui/friends';
+import { sfx } from '../sound';
 
 const N_PHASES = 6;
 
@@ -59,7 +60,7 @@ export function Lesson({ sheet }: { sheet: Sheet }) {
 }
 
 function LessonEnd({ sheet, passed, top, onRetry }: { sheet: Sheet; passed: boolean; top: React.ReactNode; onRetry: () => void }) {
-  useEffect(() => { celebrate(); }, []);
+  useEffect(() => { celebrate(); sfx('complete'); }, []);
   return (
     <div className="runner">
       {top}
@@ -87,7 +88,7 @@ function Understand({ sheet, ex, header, onNext }: { sheet: Sheet; ex: LiveExerc
   const [answer, setAnswer] = useState<number | null>(null);
   const q = sheet.questions[0];
   const overlays: (Overlay | null)[] = [scen !== null && st.scenarios ? st.scenarios[scen].frames[0] : st.hints[2]];
-  let text: React.ReactNode = sheet.intuition;
+  let text: React.ReactNode = sheet.analogy ?? sheet.intuition;
   if (scen !== null && st.scenarios) text = st.scenarios[scen].frames[0].text;
   else if (sel !== null && !ex.state.v[sel]) text = `${cellName(sel)} puede ser ${digitsOf(ex.state.c[sel]).join(', ')}.`;
 
@@ -118,6 +119,7 @@ function Understand({ sheet, ex, header, onNext }: { sheet: Sheet; ex: LiveExerc
         tutor={<TutorBubble mood="think">{text}</TutorBubble>}
         board={<Board values={ex.state.v} cands={ex.state.c} givens={ex.givens} locked={ex.state.v.map(x => x > 0)} overlays={overlays} selected={sel} onCell={c => { setSel(c); setScen(null); }} onMove={setSel} />}
         below={<>
+          {sheet.terms && <dl className="terms">{sheet.terms.map(t => <div key={t}><dt>{t}</dt><dd>{GLOSSARY[t]}</dd></div>)}</dl>}
           {st.scenarios && <div className="scen-chips">{st.scenarios.map((s, i) => <button key={i} className={`scen${scen === i ? ' on' : ''}`} onClick={() => setScen(scen === i ? null : i)}>{s.label}</button>)}</div>}
           <div className="board-tools"><CoordHint /></div>
         </>}

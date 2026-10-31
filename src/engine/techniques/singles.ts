@@ -15,6 +15,7 @@ export function findNakedSingles(s: State): Step[] {
       frames.push({
         text: ds.length ? `Su ${unitName(u).split(' ')[0]} ya contiene ${joinEs(ds.sort((a, b) => a - b))}.` : `Su ${unitName(u).split(' ')[0]} no descarta números nuevos.`,
         units: [{ u, tone: 'focus' }], cells: [{ cell, tone: 'focus' }, ...sources.map(x => ({ cell: x, tone: 'source' as const }))],
+        rays: sources.map(x => ({ from: x, to: cell })),
       });
     }
     const unexplained = [1, 2, 3, 4, 5, 6, 7, 8, 9].filter(x => x !== d && !seen.has(x));
@@ -23,7 +24,7 @@ export function findNakedSingles(s: State): Step[] {
     out.push({
       tech: 'naked_single', key: `ns${cell}`, placements: [cd(cell, d)], elims: [],
       pattern: { cells: [cell], cands: [cd(cell, d)] }, digits: [d], variant: 'cell',
-      title: `Single desnudo en ${cellName(cell)}`,
+      title: `Candidato único en ${cellName(cell)}`,
       hints: [
         { text: `Busca en la ${unitName(BOX_UNIT(cell))} una casilla con una sola posibilidad.`, units: [{ u: BOX_UNIT(cell), tone: 'focus' }] },
         { text: `Mira ${cellName(cell)}.`, cells: [{ cell, tone: 'focus' }] },
@@ -65,6 +66,7 @@ export function findHiddenSingles(s: State): Step[] {
           text: `El ${d} de ${cellName(src)} cubre su ${unitName(shared)}: ${covered.length === 1 ? cellName(covered[0]) + ' queda descartada' : listCells(covered) + ' quedan descartadas'}.`,
           units: [{ u, tone: 'focus' }, { u: shared, tone: 'cover' }],
           cells: [{ cell: src, tone: 'source' }, ...covered.map(x => ({ cell: x, tone: 'dim' as const }))], digitFocus: d,
+          rays: covered.map(x => ({ from: src, to: x })),
         });
       }
       if (byElim.length) frames.push({ text: `En ${listCells(byElim)} el ${d} ya se había descartado antes.`, units: [{ u, tone: 'focus' }], cells: byElim.map(x => ({ cell: x, tone: 'dim' as const })), digitFocus: d });
@@ -73,7 +75,7 @@ export function findHiddenSingles(s: State): Step[] {
       out.push({
         tech: 'hidden_single', key: `hs${cell}-${d}`, placements: [cd(cell, d)], elims: [],
         pattern: { cells: [cell], cands: [cd(cell, d)] }, digits: [d], variant: u < 9 ? 'row' : u < 18 ? 'col' : 'box',
-        title: `Single oculto: ${d} en la ${unitName(u)}`,
+        title: `Lugar único: el ${d} en la ${unitName(u)}`,
         hints: [
           { text: `Concéntrate en la ${unitName(u)}.`, units: [{ u, tone: 'focus' }] },
           { text: `Mira dónde están los ${d} que rodean la ${unitName(u)}.`, units: [{ u, tone: 'focus' }], cells: sources.map(x => ({ cell: x, tone: 'source' as const })), digitFocus: d },

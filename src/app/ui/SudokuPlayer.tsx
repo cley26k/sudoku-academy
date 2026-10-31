@@ -8,6 +8,7 @@ import { Board } from './Board';
 import { TutorBubble, Mood } from './Tutor';
 import { Btn, I, Icon, DigitPad, useFrames, FrameControls, celebrate, CoordHint } from './common';
 import { BottomBar } from './layout';
+import { sfx } from '../sound';
 
 export interface PlayerProps {
   initial: State; givens: boolean[]; solution: number[]; allowed: TechId[] | 'all';
@@ -29,6 +30,7 @@ export function SudokuPlayer(p: PlayerProps) {
   const [auto, setAuto] = useState(p.autoCands !== false);
   const [noteMode, setNoteMode] = useState(false);
   const [sel, setSel] = useState<number | null>(null);
+  const [hlD, setHlD] = useState(0);
   const [hist, setHist] = useState<Snap[]>([]);
   const [wrongShown, setWrongShown] = useState<number[]>([]);
   const [hint, setHint] = useState<{ step: Step | null; level: number; wrongCell?: number } | null>(null);
@@ -51,7 +53,7 @@ export function SudokuPlayer(p: PlayerProps) {
 
   useEffect(() => {
     if (complete && doneAt === null) {
-      setDoneAt(Date.now()); celebrate();
+      setDoneAt(Date.now()); celebrate(); sfx('complete');
       p.onComplete?.({ ms: Date.now() - t0, mistakes, hints: hintsUsed, used: [...solveHuman(p.initial, p.allowed).used] });
     }
   }, [complete]);
@@ -59,17 +61,20 @@ export function SudokuPlayer(p: PlayerProps) {
   function snap() { setHist(h => [...h.slice(-200), { v: v.slice(), elims: [...elims], notes: notes.slice() }]); }
   function undo() { const s = hist[hist.length - 1]; if (!s) return; setHist(h => h.slice(0, -1)); setV(s.v); setElims(new Set(s.elims)); setNotes(s.notes); }
   function input(d: number, asNote = noteMode) {
-    if (sel === null || locked[sel] || doneAt) return;
+    if (doneAt) return;
+    if (sel === null || locked[sel]) { setHlD(hlD === d ? 0 : d); return; }
     snap(); setHint(null); setWrongShown([]); setDemo(null);
-    if (!asNote) { const nv = v.slice(); nv[sel] = nv[sel] === d ? 0 : d; setV(nv); return; }
+    if (!asNote) { const nv = v.slice(); nv[sel] = nv[sel] === d ? 0 : d; setV(nv); sfx(nv[sel] ? 'place' : 'erase'); return; }
+    sfx('select');
     if (v[sel]) return;
     if (auto) { const k = sel * 10 + d; const n = new Set(elims); if (n.has(k)) n.delete(k); else if (has(basic[sel], d)) n.add(k); setElims(n); }
     else { const n = notes.slice(); n[sel] ^= 1 << d; setNotes(n); }
   }
-  function erase() { if (sel === null || locked[sel] || !v[sel]) return; snap(); const nv = v.slice(); nv[sel] = 0; setV(nv); }
+  function erase() { if (sel === null || locked[sel] || !v[sel]) return; snap(); const nv = v.slice(); nv[sel] = 0; setV(nv); sfx('erase'); }
   function check() {
     const wrong = v.map((d, i) => (d && !locked[i] && d !== p.solution[i] ? i : -1)).filter(i => i >= 0);
     setWrongShown(wrong);
+    sfx(wrong.length ? 'wrong' : 'correct');
     if (wrong.length) { setMistakes(m => m + wrong.length); p.onMistake?.(`Número incorrecto en ${cellName(wrong[0])}`); }
   }
   function logical(): State {
@@ -79,7 +84,7 @@ export function SudokuPlayer(p: PlayerProps) {
     return { v: vv, c };
   }
   function askHint() {
-    setDemo(null);
+    setDemo(null); sfx('hint');
     if (hint && hint.level < 4 && (hint.step || (hint.wrongCell !== undefined && hint.level < 2))) { setHint({ ...hint, level: hint.level + 1 }); return; }
     setHintsUsed(h => h + 1);
     const wrong = v.findIndex((d, i) => d && !locked[i] && d !== p.solution[i]);
@@ -95,7 +100,7 @@ export function SudokuPlayer(p: PlayerProps) {
     const nv = v.slice(); st.placements.forEach(q => (nv[q.cell] = q.digit)); setV(nv);
     const n = new Set(elims); st.elims.forEach(e => n.add(e.cell * 10 + e.digit)); setElims(n);
     if (!auto) { const nn = notes.slice(); st.elims.forEach(e => (nn[e.cell] &= ~(1 << e.digit))); setNotes(nn); }
-    setHint(null); setDemo(null);
+    setHint(null); setDemo(null); sfx('place');
   }
   function key(k: string, e: React.KeyboardEvent) {
     if (/^[1-9]$/.test(k)) input(+k, e.shiftKey ? true : undefined);
@@ -164,7 +169,7 @@ export function SudokuPlayer(p: PlayerProps) {
         </div>
         <div className="ex-board">
           <Board values={reviewState ? reviewState.v : v} cands={reviewState ? reviewState.c : shownCands} givens={p.givens} locked={locked}
-            overlays={overlays} selected={reviewState ? null : sel} errors={wrongShown} onCell={c => setSel(c)} onMove={setSel} onKey={key} />
+            overlays={overlays} selected={reviewState ? null : sel} errors={wrongShown} onCell={c => { setSel(c); setHlD(0); }} onMove={setSel} onKey={key} hlDigit={hlD || undefined} />
           {(review !== null || demo) && <FrameControls ctl={ctl} />}
           {!doneAt && (
             <>
@@ -175,7 +180,7 @@ export function SudokuPlayer(p: PlayerProps) {
                 <Tool icon={I.check} label="Revisar" onClick={check} />
                 {p.hints !== false && <Tool icon={I.bulb} label="Pista" onClick={askHint} />}
               </div>
-              <DigitPad onDigit={d => input(d)} counts={noteMode ? undefined : counts} disabled={sel === null || locked[sel ?? 0]} />
+              <DigitPad onDigit={d => input(d)} counts={noteMode ? undefined : counts} hl={hlD} />
               <div className="board-tools">
                 <CoordHint />
                 <button className="tool-chip" onClick={() => { if (auto) { setNotes(shownCands.map((m, i) => (v[i] ? 0 : m))); } setAuto(!auto); }} aria-pressed={auto}>{auto ? 'Candidatos: auto' : 'Candidatos: a mano'}</button>

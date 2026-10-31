@@ -22,6 +22,7 @@ export interface Overlay {
   links?: { a: CD; b: CD; kind: 'strong' | 'weak' }[];
   place?: CD[];   // valores que la deducción confirma
   hypo?: CD[];    // valores supuestos en una hipótesis
+  rays?: { from: number; to: number; tone?: 'block' | 'elim' }[]; // flechas «esto bloquea aquello»
   digitFocus?: number;
 }
 export interface Frame extends Overlay { text: string }

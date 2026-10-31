@@ -48,7 +48,8 @@ export function findFish(s: State, n: number): Step[] {
             ? `Cada ${coverW} admite un solo ${d}. Si una ${lineW} pone su ${d} en una ${coverW}, la otra ${lineW} tiene que usar la otra.`
             : `Cada ${lineW} debe colocar un ${d} y cada ${coverW} admite uno solo: los ${NUM[n]} ${d} de estas ${linesW} ocuparán exactamente esas ${NUM[n]} ${coversW}.`,
           units: [...bo, ...co], cands: patT, digitFocus: d });
-        frames.push({ text: `Las ${coverTxt} ya tienen su ${d} asegurado dentro de las ${baseTxt}. Fuera de ellas se elimina: ${listCells(elims.map(e => e.cell))}.`, units: [...bo, ...co], cands: [...patT, ...elT], digitFocus: d });
+        const fishRays = elims.map(e => { const same = pat.filter(p => coverIdx(p.cell) === coverIdx(e.cell)).map(p => p.cell); const from = same.reduce((b, c) => (Math.abs(c - e.cell) < Math.abs(b - e.cell) ? c : b), same[0] ?? pat[0].cell); return { from, to: e.cell, tone: 'elim' as const }; });
+        frames.push({ text: `Las ${coverTxt} ya tienen su ${d} asegurado dentro de las ${baseTxt}. Fuera de ellas se elimina: ${listCells(elims.map(e => e.cell))}.`, units: [...bo, ...co], cands: [...patT, ...elT], digitFocus: d, rays: fishRays });
         let scenarios;
         if (n === 2) {
           const [b1, b2] = bs;

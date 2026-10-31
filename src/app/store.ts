@@ -14,12 +14,12 @@ export interface Progress {
   mistakes: Mistake[];
   sessions: Session[];
   daily: Record<string, { done: boolean; ms: number }>;
-  settings: { streaks: boolean; theme: 'system' | 'light' | 'dark' };
+  settings: { streaks: boolean; theme: 'system' | 'light' | 'dark'; sound: boolean; music: boolean };
   fullSolved: number;
   chests: number[];
 }
 const KEY = 'sudoku-academy/v1';
-const fresh = (): Progress => ({ v: 1, lessons: {}, attempts: [], mistakes: [], sessions: [], daily: {}, settings: { streaks: true, theme: 'system' }, fullSolved: 0, chests: [] });
+const fresh = (): Progress => ({ v: 1, lessons: {}, attempts: [], mistakes: [], sessions: [], daily: {}, settings: { streaks: true, theme: 'system', sound: true, music: false }, fullSolved: 0, chests: [] });
 
 function load(): Progress {
   try {

@@ -5,19 +5,21 @@ function build(kind: 'pointing' | 'claiming', s: State, from: number, to: number
   const elims: CD[] = elimCells.map(c => cd(c, d));
   const patternCands = pos.map(c => cd(c, d));
   const pointing = kind === 'pointing';
+  const near = (c: number) => pos.reduce((b, p) => (Math.abs(p - c) < Math.abs(b - c) ? p : b), pos[0]);
+  const rays = elimCells.map(c => ({ from: near(c), to: c, tone: 'elim' as const }));
   const fromN = unitName(from), toN = unitName(to);
   const base = { u: from, tone: 'focus' as const }, cover = { u: to, tone: 'cover' as const };
   return {
     tech: kind, key: `${kind}${from}-${to}-${d}`, placements: [], elims,
     pattern: { cells: pos, cands: patternCands }, digits: [d],
     variant: pointing ? (to < 9 ? 'row' : 'col') : (from < 9 ? 'row' : 'col'),
-    title: pointing ? `Pointing: ${d} de la ${fromN} hacia la ${toN}` : `Claiming: ${d} de la ${fromN} dentro de la ${toN}`,
+    title: pointing ? `Bloqueo caja-línea: el ${d} de la ${fromN} en la ${toN}` : `Bloqueo línea-caja: el ${d} de la ${fromN} en la ${toN}`,
     hints: [
       { text: `Mira la ${fromN}.`, units: [base] },
       { text: `Observa dónde puede ir el ${d} dentro de la ${fromN}.`, units: [base], cands: patternCands.map(x => ({ ...x, tone: 'pattern' as const })), digitFocus: d },
       { text: pointing
-          ? `Todas las posiciones del ${d} en la caja están en la ${toN}. La caja «apunta» a esa línea.`
-          : `Todas las posiciones del ${d} en la ${fromN} caen dentro de la ${toN}. La línea «reclama» el ${d} de esa caja.`,
+          ? `Todas las posiciones del ${d} en la caja están en la ${toN}. La caja bloquea esa línea.`
+          : `Todas las posiciones del ${d} en la ${fromN} caen dentro de la ${toN}. La línea bloquea esa caja.`,
         units: [base, cover], cands: patternCands.map(x => ({ ...x, tone: 'pattern' as const })), digitFocus: d },
       { text: `Se puede eliminar el ${d} de ${listCells(elimCells)}.`, units: [base, cover], cands: [...patternCands.map(x => ({ ...x, tone: 'pattern' as const })), ...elims.map(x => ({ ...x, tone: 'elim' as const }))], digitFocus: d },
     ],
@@ -31,11 +33,11 @@ function build(kind: 'pointing' | 'claiming', s: State, from: number, to: number
       { text: pointing
           ? `Por tanto, el resto de la ${toN} no puede tener ${d}: se elimina de ${listCells(elimCells)}.`
           : `Por tanto, el resto de la ${toN} no puede tener ${d}: se elimina de ${listCells(elimCells)}.`,
-        units: [base, cover], cands: [...patternCands.map(x => ({ ...x, tone: 'pattern' as const })), ...elims.map(x => ({ ...x, tone: 'elim' as const }))], digitFocus: d },
+        units: [base, cover], cands: [...patternCands.map(x => ({ ...x, tone: 'pattern' as const })), ...elims.map(x => ({ ...x, tone: 'elim' as const }))], digitFocus: d, rays },
     ],
     scenarios: pos.map(p => ({
       label: `Si el ${d} está en ${cellName(p)}`,
-      frames: [{ text: `Con el ${d} en ${cellName(p)}, ${pointing ? `la ${toN}` : `la ${toN}`} ya tiene su ${d}: ${listCells(elimCells)} no pueden tenerlo.`, hypo: [cd(p, d)], units: [base, cover], cands: elims.map(x => ({ ...x, tone: 'elim' as const })), digitFocus: d }],
+      frames: [{ text: `Con el ${d} en ${cellName(p)}, ${pointing ? `la ${toN}` : `la ${toN}`} ya tiene su ${d}: ${listCells(elimCells)} no pueden tenerlo.`, hypo: [cd(p, d)], units: [base, cover], cands: elims.map(x => ({ ...x, tone: 'elim' as const })), digitFocus: d, rays: elimCells.map(c => ({ from: p, to: c, tone: 'elim' as const })) }],
     })),
     whyNot: (cell, digit) => {
       if (digit !== d) return `Este patrón solo trata el ${d}; no dice nada del ${digit}.`;

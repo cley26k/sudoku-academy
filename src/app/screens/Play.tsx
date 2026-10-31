@@ -39,7 +39,7 @@ export function Play({ daily }: { daily?: boolean }) {
         <button className="ltop-x" onClick={() => (daily ? go('sudoku') : setPz(null))} aria-label="Volver"><Icon d={I.back} size={22} stroke={2.6} /></button>
         <div className="tb-techs"><span className="chip">{daily ? `Reto ${today}` : LEVELS.find(l => l.id === lv)?.label}</span></div>
       </div>
-      <SudokuPlayer key={cur.id + n} initial={stateFromValues(cur.givens)} givens={cur.givens.map(x => x > 0)} solution={cur.solution} allowed="all"
+      <SudokuPlayer key={cur.id + n} initial={stateFromValues(cur.givens)} givens={cur.givens.map(x => x > 0)} solution={cur.solution} allowed="all" autoCands={!daily && lv !== 'facil'}
         onComplete={r => {
           update(pp => { pp.fullSolved++; if (daily) pp.daily[today] = { done: true, ms: r.ms }; });
           recordAttempt({ tech: cur.hardest ?? 'naked_single', kind: 'full', ok: true, hints: r.hints, errors: r.mistakes, ms: r.ms, variant: '', exId: '' });

@@ -13,6 +13,8 @@ import { useProgress, update } from './store';
 import { Tesela } from './ui/Tutor';
 import type { TechId } from '../engine/step';
 import { TECH_BY_ID } from '../engine/techniques';
+import { initAudio, setMusic } from './sound';
+initAudio();
 
 const NAV = [
   { r: 'inicio', label: 'Aprender', icon: I.map, c: 'green' },
@@ -76,13 +78,17 @@ function App() {
               </li>
             ))}
           </ul>
+          <div className="audio-btns">
+            <button className={`icon-toggle${p.settings.sound ? ' on' : ''}`} onClick={() => update(pp => { pp.settings.sound = !pp.settings.sound; })} aria-pressed={p.settings.sound} aria-label={p.settings.sound ? 'Silenciar efectos' : 'Activar efectos de sonido'}><Icon d={p.settings.sound ? I.speaker : I.mute} /></button>
+            <button className={`icon-toggle${p.settings.music ? ' on' : ''}`} onClick={() => { const on = !p.settings.music; update(pp => { pp.settings.music = on; }); setMusic(on); }} aria-pressed={p.settings.music} aria-label={p.settings.music ? 'Apagar música' : 'Poner música'}><Icon d={I.music} /></button>
+          </div>
           <button className="theme-btn" onClick={() => update(pp => { pp.settings.theme = nextTheme; })} aria-label={`Tema: ${p.settings.theme === 'system' ? 'sistema' : p.settings.theme === 'dark' ? 'oscuro' : 'claro'}. Cambiar.`}>
             <Icon d={p.settings.theme === 'dark' ? I.moon : p.settings.theme === 'light' ? I.sun : I.eye} />
             <span>{p.settings.theme === 'system' ? 'Tema auto' : p.settings.theme === 'dark' ? 'Oscuro' : 'Claro'}</span>
           </button>
         </nav>
       )}
-      <main className="main" id="main"><Screen route={route} /></main>
+      <main className="main" id="main"><div className="page" key={route.split('-')[0]}><Screen route={route} /></div></main>
     </div>
   );
 }
