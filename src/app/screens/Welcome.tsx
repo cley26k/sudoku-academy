@@ -16,7 +16,7 @@ const TILE_TILT = [-8, 6, -5, 9, -4];
 
 /** Escena con todo el elenco: Tesela al centro y sus amigos alrededor. */
 export function CastScene() {
-  const tiles = [[0, 30, 3], [92, 32, 7], [93, 68, 5], [24, 82, 1], [47, 0, 9]];
+  const tiles = [[0, 30, 3], [92, 32, 7], [93, 68, 5], [24, 82, 1], [46, 90, 9]];
   return (
     <div className="cast" aria-hidden="true">
       {tiles.map(([x, y, d], i) => <span key={i} className={`cast-tile c-${TILE_COLORS[i]}`} style={{ left: `${x}%`, top: `${y}%`, animationDelay: `${i * .4}s`, rotate: `${TILE_TILT[i]}deg` }}>{d}</span>)}

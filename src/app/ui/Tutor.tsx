@@ -115,6 +115,9 @@ export function Tesela({ mood = 'idle', size = 84, talking = false, wear }: { mo
 }
 
 /** Mascota con globo. La boca «habla» unos instantes cada vez que cambia el texto. */
+/** Guion no separable en nombres de técnicas (X-Wing, XY-Chain…) para que no se corten al final de línea. */
+const nbHyphens = (s: string) => s.replace(/\b([A-Z0-9]{1,3})-([A-Z][a-z]+)\b/g, '$1\u2011$2');
+
 export function TutorBubble({ mood, children, title, size = 84 }: { mood?: Mood; children?: React.ReactNode; title?: string; size?: number }) {
   const [talking, setTalking] = useState(false);
   const key = typeof children === 'string' ? children : title ?? '';
@@ -131,7 +134,7 @@ export function TutorBubble({ mood, children, title, size = 84 }: { mood?: Mood;
       {(title || children) && (
         <div className="bubble" role="status" aria-live="polite" key={String(key).slice(0, 40)}>
           {title && <div className="bubble-title">{title}</div>}
-          {children && <div className="bubble-text">{children}</div>}
+          {children && <div className="bubble-text">{typeof children === 'string' ? nbHyphens(children) : children}</div>}
         </div>
       )}
     </div>
