@@ -112,7 +112,7 @@ export function Shop() {
           const on = it.slot ? p.equipped?.[it.slot] === it.id : false;
           return (
             <div key={it.id} className={`shop-item${on ? ' on' : ''}`}>
-              <div className="si-art">{it.slot ? <Tesela mood="idle" size={86} wear={{ [it.slot]: it.id }} /> : <span className="si-shield"><Icon d={I.shield} size={42} stroke={2.2} /><b>{p.freezes ?? 0}/2</b></span>}</div>
+              <div className="si-art">{it.slot ? <Tesela mood="happy" size={86} wear={{ [it.slot]: it.id }} /> : <span className="si-shield"><Icon d={I.shield} size={42} stroke={2.2} /><b>{p.freezes ?? 0}/2</b></span>}</div>
               <b>{it.name}</b>
               <small>{it.desc}</small>
               {owned ? <>{on && <span className="si-on"><Icon d={I.check} size={14} stroke={3} /> Puesto</span>}<Btn kind={on ? 'ghost' : 'primary'} onClick={() => { equip(it.id); sfx('select'); }}>{on ? 'Quitar' : 'Ponérselo'}</Btn></>
@@ -215,7 +215,7 @@ export function MomentLayer({ paused }: { paused: boolean }) {
           <p>Vuelve mañana para que siga creciendo.</p>
         </>}
         {m.kind === 'level' && <>
-          <div className="mo-level"><span><CountUp from={m.n - 1} to={m.n} delay={500} dur={300} /></span></div>
+          <div className="mo-burst"><div className="mo-level"><span><CountUp from={m.n - 1} to={m.n} delay={500} dur={300} /></span></div><Tesela mood="happy" size={90} /></div>
           <h1 id="moment-t">¡Nivel {m.n}!</h1>
           <p className="mo-gems"><Icon d={I.gem} size={20} stroke={2.6} />+5</p>
         </>}

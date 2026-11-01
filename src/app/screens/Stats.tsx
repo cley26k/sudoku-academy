@@ -54,7 +54,7 @@ export function ProgressPage() {
           <button key={s.id} className={`mrow c-${UNITS_MAP.find(u => u.n === s.unit)!.color}`} onClick={() => go(`tecnica-${s.id}`)}>
             <Ring value={m.score} size={52} tone={m.level === 'dominada' ? 'green' : 'unit'}><span className="lc-abbr">{s.abbr}</span></Ring>
             <span className="lc-txt"><b>{s.name}</b><small>{LEVEL_LABEL[m.level]}{m.due ? ' · toca repasar' : ''}{m.lesson && !m.test ? ' · falta la prueba' : ''}</small></span>
-            <span className="mrow-pct">{m.score}%</span>
+            <span className={`mrow-pct${m.score ? '' : ' zero'}`}>{m.score}%</span>
           </button>
         ))}
       </div>
