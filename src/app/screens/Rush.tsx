@@ -6,7 +6,7 @@ import type { TechId } from '../../engine/step';
 import { ExerciseRunner } from '../ui/ExerciseRunner';
 import { Btn, I, Icon, celebrate } from '../ui/common';
 import { Tesela } from '../ui/Tutor';
-import { useProgress, update, dayKey, recordAttempt } from '../store';
+import { useProgress, update, dayKey, recordAttempt, xpTotal, getProgress } from '../store';
 import { sfx } from '../sound';
 import { go } from '../router';
 
@@ -23,6 +23,8 @@ export function Rush() {
   const [record, setRecord] = useState(false);
   const recent = useRef(new Set<number>());
   const scoreRef = useRef(0);
+  const ended = useRef(false);
+  const xp0 = useRef(0);
   const learned = READY.filter(s => p.lessons[s.id]?.done).map(s => s.impl!) as TechId[];
   const pool: TechId[] = learned.length >= 2 ? learned : ['naked_single', 'hidden_single', 'pointing', 'claiming'];
 
@@ -30,8 +32,11 @@ export function Rush() {
     const r = pickExercise({ techs: pool, difficulty: 0, pureOnly: false, avoid: recent.current });
     if (r.ex) { recent.current.add(Number(r.ex.id.split(':')[0])); setEx(r.ex); }
   }
-  function start() { setLeft(SECONDS); setLives(LIVES); setScore(0); scoreRef.current = 0; setRecord(false); recent.current.clear(); next(); setPhase('play'); }
+  function start() { ended.current = false; xp0.current = xpTotal(getProgress()); setLeft(SECONDS); setLives(LIVES); setScore(0); scoreRef.current = 0; setRecord(false); recent.current.clear(); next(); setPhase('play'); }
   function end(final: number) {
+    // Se puede llegar a la vez por tiempo y por vidas: solo cuenta la primera.
+    if (ended.current) return;
+    ended.current = true;
     setPhase('end');
     const isRecord = final > (p.rushBest ?? 0);
     setRecord(isRecord);
@@ -48,6 +53,7 @@ export function Rush() {
 
   if (phase === 'intro') return (
     <div className="rush-intro">
+      <button className="ltop-x rush-close" onClick={() => go('entrenar')} aria-label="Salir"><Icon d={I.x} size={24} stroke={2.6} /></button>
       <div className="rush-hero"><Tesela mood="wow" size={140} /><span className="rush-clock"><Icon d={I.clock} size={40} stroke={2.4} /></span></div>
       <h1>Contrarreloj</h1>
       <div className="rush-rules">
@@ -67,7 +73,7 @@ export function Rush() {
       <div className="stat-tiles">
         <div className="st st-yellow"><span>Puntos</span><b>{score}</b></div>
         <div className="st st-purple"><span>Récord</span><b>{Math.max(score, p.rushBest ?? 0)}</b></div>
-        <div className="st st-green"><span>XP</span><b>+{score * 2}</b></div>
+        <div className="st st-green"><span>XP</span><b>+{Math.max(0, xpTotal(p) - xp0.current)}</b></div>
       </div>
       <div className="row-actions"><Btn onClick={() => go('inicio')}>Mapa</Btn><Btn kind="primary" big onClick={start}>Otra vez</Btn></div>
     </div>
@@ -83,8 +89,9 @@ export function Rush() {
   );
   return ex ? (
     <ExerciseRunner key={ex.id} ex={ex} task="deduce" hints={false} header={header} title="¡Rápido!"
-      onWrong={() => setLives(l => { const n = l - 1; if (n <= 0) window.setTimeout(() => end(scoreRef.current), 600); return n; })}
+      onWrong={() => { if (ended.current) return; setLives(l => { const n = l - 1; if (n <= 0) window.setTimeout(() => end(scoreRef.current), 600); return n; }); }}
       onResult={r => {
+        if (ended.current || lives <= 0) return;
         recordAttempt({ tech: ex.tech, kind: 'deduce', ok: r.ok, hints: 0, errors: r.errors, ms: r.ms, variant: r.variant, exId: ex.id }, r.ok ? undefined : r.note);
         if (r.ok) { scoreRef.current++; setScore(scoreRef.current); window.setTimeout(next, 650); }
       }} />

@@ -73,7 +73,7 @@ export function lessonExercise(t: TechId, slot: number, opts: { variantNot?: str
 export interface FullPuzzle { givens: number[]; solution: number[]; hardest: TechId | null; used: TechId[]; source: string; id: string }
 
 export const LEVELS: { id: string; label: string; max: TechId; blurb: string }[] = [
-  { id: 'facil', label: 'Fácil', max: 'hidden_single', blurb: 'Solo singles.' },
+  { id: 'facil', label: 'Fácil', max: 'hidden_single', blurb: 'Solo técnicas básicas.' },
   { id: 'media', label: 'Media', max: 'hidden_triple', blurb: 'Intersecciones y subconjuntos.' },
   { id: 'dificil', label: 'Difícil', max: 'unique_rect1', blurb: 'Peces, alas y rectángulos únicos.' },
   { id: 'experta', label: 'Experta', max: 'jellyfish', blurb: 'Coloreado y peces grandes.' },

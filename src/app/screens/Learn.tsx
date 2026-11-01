@@ -204,7 +204,7 @@ export function Library() {
           return (
             <button key={s.id} className={`lcard c-${unitColor(s)} k-${k}`} onClick={() => go(s.status === 'concept' ? `leccion-${s.id}` : `tecnica-${s.id}`)}>
               <Ring value={k === 'pending' ? 0 : m ? m.score : p.lessons[s.id]?.done ? 100 : 0} size={58} tone={k === 'mastered' ? 'green' : 'unit'}><span className="lc-abbr">{s.abbr}</span></Ring>
-              <span className="lc-txt"><b>{s.name}</b><small>{k === 'pending' ? 'Pronto' : m ? LEVEL_LABEL[m.level] : p.lessons[s.id]?.done ? 'Completada' : 'Básico'}</small></span>
+              <span className="lc-txt"><b>{s.name}</b><small>{k === 'pending' ? 'Pronto' : m ? LEVEL_LABEL[m.level] : p.lessons[s.id]?.done ? 'Completada' : 'Sin empezar'}</small></span>
             </button>
           );
         })}

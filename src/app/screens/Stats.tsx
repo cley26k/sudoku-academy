@@ -62,6 +62,12 @@ export function ProgressPage() {
         <summary><Icon d={I.gear} size={18} /> Ajustes</summary>
         <Toggle id="set-streak" on={p.settings.streaks} onChange={v => update(pp => { pp.settings.streaks = v; })} label="Mostrar rachas" />
         <Toggle id="set-sound" on={p.settings.sound} onChange={v => update(pp => { pp.settings.sound = v; })} label="Efectos de sonido" />
+        <div className="seg" role="radiogroup" aria-label="Tema">
+          <span className="seg-lbl">Tema</span>
+          {([['system', 'Automático'], ['light', 'Claro'], ['dark', 'Oscuro']] as const).map(([v, l]) => (
+            <button key={v} role="radio" aria-checked={p.settings.theme === v} className={p.settings.theme === v ? 'on' : ''} onClick={() => update(pp => { pp.settings.theme = v; })}>{l}</button>
+          ))}
+        </div>
         <Toggle id="set-music" on={p.settings.music} onChange={v => { update(pp => { pp.settings.music = v; }); setMusic(v); }} label="Música de fondo" />
         <p className="small muted">El dominio cuenta precisión sin pistas, variedad de casos y días distintos, no solo cantidad.</p>
         <div className="row-actions">
@@ -94,6 +100,12 @@ export function ReviewPage() {
   return (
     <div className="reviewpage">
       <div className="tc-head"><Tesela mood={open.length ? 'think' : 'happy'} size={84} /><h1>{open.length ? 'Tus errores' : '¡Sin errores pendientes!'}</h1></div>
+      {!open.length && (
+        <div className="card empty-note">
+          <p>Aquí aparecerán los ejercicios que falles, para repetirlos hasta dominarlos. Cuando aciertes uno, desaparece de la lista.</p>
+          <Btn kind="primary" big onClick={() => go('entrenar')}>Ir a entrenar</Btn>
+        </div>
+      )}
       <div className="mlist">
         {open.map(x => (
           <button key={x.id} className={`mrow c-${UNITS_MAP.find(u => u.n === sheetForTech(x.tech).unit)!.color}`} onClick={() => setActive(x.id)}>

@@ -38,7 +38,7 @@ export function findSimpleColoring(s: State): Step[] {
         { text: `Pinta la cadena alternando dos colores. O todas las casillas azules tienen el ${d}, o todas las magenta.`, cands: colored, links, digitFocus: d },
       ];
       // Regla del color repetido (wrap)
-      let wrap: { bad: number[]; p: number; q: number } | null = null;
+      let wrap = null as { bad: number[]; p: number; q: number } | null;
       for (const grp of [A, B]) {
         for (let i = 0; i < grp.length && !wrap; i++) for (let j = i + 1; j < grp.length && !wrap; j++)
           if (sees(grp[i], grp[j])) wrap = { bad: grp, p: grp[i], q: grp[j] };

@@ -47,7 +47,7 @@ export function Lesson({ sheet }: { sheet: Sheet }) {
     recordAttempt({ tech, kind, ok: r.ok, hints: r.hints, errors: r.errors, ms: r.ms, variant: r.variant, exId: e.id }, r.ok ? undefined : r.note);
   };
   const testPassed = !!(res.E?.ok && res.F?.ok && res.E.hints === 0 && res.F.hints === 0 && (res.E.errors + res.F.errors) <= 1);
-  const top = <LessonTop progress={finished ? 1 : phase / N_PHASES} onClose={close} />;
+  const top = <LessonTop progress={finished ? 1 : phase / N_PHASES} onClose={close} confirm={!finished && phase > 0 ? 'Perderás el progreso de esta lección.' : undefined} />;
 
   if (finished) return <LessonEnd sheet={sheet} passed={testPassed} top={top} res={res} ms={Date.now() - t0} onRetry={() => { setRetry(r => r + 1); setRes({}); setFinished(false); setPhase(4); }} />;
 
@@ -132,7 +132,7 @@ function Understand({ sheet, ex, header, onNext }: { sheet: Sheet; ex: LiveExerc
             ))}
           </div>
         </div>
-        {answer === null ? <BottomBar right={<Btn kind="primary" big disabled>Comprobar</Btn>} />
+        {answer === null ? <BottomBar text="Elige una respuesta." />
           : <BottomBar tone={ok ? 'ok' : 'bad'} title={ok ? '¡Correcto!' : 'No exactamente'} text={q.why} right={<Btn kind={ok ? 'success' : 'danger'} big onClick={onNext}>Continuar</Btn>} />}
       </div>
     );

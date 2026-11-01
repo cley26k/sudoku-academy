@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type { State } from '../../engine/grid';
 import { basicCands, has, BOX_UNIT, unitName, cellName } from '../../engine/grid';
 import type { TechId, Step, Overlay } from '../../engine/step';
@@ -15,8 +15,30 @@ export interface PlayerProps {
   autoCands?: boolean; hints?: boolean; intro?: string; title?: string;
   onComplete?: (r: { ms: number; mistakes: number; hints: number; used: TechId[] }) => void;
   onNext?: () => void; nextLabel?: string; onMistake?: (note: string) => void;
+  /** Partida guardada de la que continuar y aviso de cada cambio (null al terminar). */
+  saved?: SavedGame | null; onSave?: (g: SavedGame | null) => void;
 }
+export interface SavedGame { v: number[]; elims: number[]; notes: number[]; auto: boolean; mistakes: number; counted: number[]; hints: number; ms: number }
 interface Snap { v: number[]; elims: number[]; notes: number[] }
+
+/** Cronómetro que solo corre con la pestaña visible y la partida en juego. */
+function useClock(startMs: number, running: boolean) {
+  const acc = useRef(startMs), since = useRef<number | null>(null);
+  const get = () => acc.current + (since.current !== null ? Date.now() - since.current : 0);
+  useEffect(() => {
+    const pause = () => { if (since.current !== null) { acc.current += Date.now() - since.current; since.current = null; } };
+    const resume = () => { if (since.current === null && running && document.visibilityState === 'visible') since.current = Date.now(); };
+    const vis = () => (document.visibilityState === 'visible' ? resume() : pause());
+    resume(); document.addEventListener('visibilitychange', vis);
+    return () => { pause(); document.removeEventListener('visibilitychange', vis); };
+  }, [running]);
+  return get;
+}
+function Clock({ get }: { get: () => number }) {
+  const [, tick] = useState(0);
+  useEffect(() => { const t = window.setInterval(() => tick(x => x + 1), 1000); return () => window.clearInterval(t); }, []);
+  return <span className="sp-clock" role="timer" aria-label={`Tiempo ${fmt(get())}`}><Icon d={I.clock} size={16} stroke={2.4} />{fmt(get())}</span>;
+}
 
 function Tool({ icon, label, onClick, on, disabled }: { icon: string; label: string; onClick: () => void; on?: boolean; disabled?: boolean }) {
   return <button className={`tool${on ? ' on' : ''}`} onClick={onClick} disabled={disabled} aria-pressed={on}><span className="tool-ico"><Icon d={icon} size={22} stroke={2.2} /></span><span>{label}</span></button>;
@@ -24,21 +46,25 @@ function Tool({ icon, label, onClick, on, disabled }: { icon: string; label: str
 
 export function SudokuPlayer(p: PlayerProps) {
   const elims0 = useMemo(() => { const b = basicCands(p.initial.v); const out: number[] = []; for (let i = 0; i < 81; i++) for (let d = 1; d <= 9; d++) if (has(b[i], d) && !has(p.initial.c[i], d)) out.push(i * 10 + d); return out; }, [p.initial]);
-  const [v, setV] = useState<number[]>(p.initial.v.slice());
-  const [elims, setElims] = useState<Set<number>>(new Set(elims0));
-  const [notes, setNotes] = useState<number[]>(() => new Array(81).fill(0));
-  const [auto, setAuto] = useState(p.autoCands !== false);
+  const sv = p.saved;
+  const [v, setV] = useState<number[]>(sv?.v.slice() ?? p.initial.v.slice());
+  const [elims, setElims] = useState<Set<number>>(new Set(sv?.elims ?? elims0));
+  const [notes, setNotes] = useState<number[]>(() => sv?.notes.slice() ?? new Array(81).fill(0));
+  const [auto, setAuto] = useState(sv ? sv.auto : p.autoCands !== false);
   const [noteMode, setNoteMode] = useState(false);
   const [sel, setSel] = useState<number | null>(null);
   const [hlD, setHlD] = useState(0);
   const [hist, setHist] = useState<Snap[]>([]);
   const [wrongShown, setWrongShown] = useState<number[]>([]);
   const [hint, setHint] = useState<{ step: Step | null; level: number; wrongCell?: number } | null>(null);
-  const [hintsUsed, setHintsUsed] = useState(0);
+  const [hintsUsed, setHintsUsed] = useState(sv?.hints ?? 0);
   const [thinking, setThinking] = useState(false);
-  const [mistakes, setMistakes] = useState(0);
-  const [t0] = useState(Date.now());
+  const [mistakes, setMistakes] = useState(sv?.mistakes ?? 0);
+  // Cada número erróneo (casilla + dígito) cuenta una sola vez, aunque se revise varias veces.
+  const counted = useRef(new Set<number>(sv?.counted ?? []));
   const [doneAt, setDoneAt] = useState<number | null>(null);
+  const [doneMs, setDoneMs] = useState(0);
+  const elapsed = useClock(sv?.ms ?? 0, doneAt === null);
   const [review, setReview] = useState<number | null>(null);
   const [demo, setDemo] = useState<Step | null>(null);
   const locked = p.initial.v.map(x => x > 0);
@@ -53,10 +79,17 @@ export function SudokuPlayer(p: PlayerProps) {
 
   useEffect(() => {
     if (complete && doneAt === null) {
-      setDoneAt(Date.now()); celebrate(); sfx('complete');
-      p.onComplete?.({ ms: Date.now() - t0, mistakes, hints: hintsUsed, used: [...solveHuman(p.initial, p.allowed).used] });
+      const ms = elapsed();
+      setDoneAt(Date.now()); setDoneMs(ms); celebrate(); sfx('complete');
+      p.onSave?.(null);
+      p.onComplete?.({ ms, mistakes, hints: hintsUsed, used: [...solveHuman(p.initial, p.allowed).used] });
     }
   }, [complete]);
+  // Guarda la partida en cada cambio y al ocultar la pestaña, para continuarla más tarde.
+  const save = () => { if (!complete) p.onSave?.({ v, elims: [...elims], notes, auto, mistakes, counted: [...counted.current], hints: hintsUsed, ms: elapsed() }); };
+  const saveRef = useRef(save); saveRef.current = save;
+  useEffect(() => { if (v.some((d, i) => d !== p.initial.v[i]) || elims.size !== elims0.length || notes.some(Boolean)) save(); }, [v, elims, notes, auto, mistakes, hintsUsed]);
+  useEffect(() => { const h = () => { if (document.visibilityState === 'hidden') saveRef.current(); }; document.addEventListener('visibilitychange', h); return () => document.removeEventListener('visibilitychange', h); }, []);
 
   function snap() { setHist(h => [...h.slice(-200), { v: v.slice(), elims: [...elims], notes: notes.slice() }]); }
   function undo() { const s = hist[hist.length - 1]; if (!s) return; setHist(h => h.slice(0, -1)); setV(s.v); setElims(new Set(s.elims)); setNotes(s.notes); }
@@ -75,7 +108,9 @@ export function SudokuPlayer(p: PlayerProps) {
     const wrong = v.map((d, i) => (d && !locked[i] && d !== p.solution[i] ? i : -1)).filter(i => i >= 0);
     setWrongShown(wrong);
     sfx(wrong.length ? 'wrong' : 'correct');
-    if (wrong.length) { setMistakes(m => m + wrong.length); p.onMistake?.(`Número incorrecto en ${cellName(wrong[0])}`); }
+    const fresh = wrong.filter(i => !counted.current.has(i * 10 + v[i]));
+    fresh.forEach(i => counted.current.add(i * 10 + v[i]));
+    if (fresh.length) { setMistakes(m => m + fresh.length); p.onMistake?.(`Número incorrecto en ${cellName(fresh[0])}`); }
   }
   function logical(): State {
     const vv = v.map((d, i) => (d === p.solution[i] ? d : 0));
@@ -103,7 +138,7 @@ export function SudokuPlayer(p: PlayerProps) {
     setHint(null); setDemo(null); sfx('place');
   }
   function key(k: string, e: React.KeyboardEvent) {
-    if (/^[1-9]$/.test(k)) input(+k, e.shiftKey ? true : undefined);
+    if (/^[1-9]$/.test(k)) { e.preventDefault(); input(+k, e.shiftKey ? true : undefined); }
     else if (k === 'Backspace' || k === 'Delete' || k === '0') erase();
     else if (k.toLowerCase() === 'n') setNoteMode(m => !m);
     else if (k.toLowerCase() === 'z' && (e.ctrlKey || e.metaKey)) undo();
@@ -137,27 +172,32 @@ export function SudokuPlayer(p: PlayerProps) {
   if (!doneAt && !hint && wrongShown.length) bar = <BottomBar tone="bad" title={`${wrongShown.length} error${wrongShown.length > 1 ? 'es' : ''}`} text="Marcados en rojo." right={<Btn kind="danger" big onClick={() => setWrongShown([])}>Vale</Btn>} />;
   if (!doneAt && !hint && !wrongShown.length && v.every(Boolean) && !complete) bar = <BottomBar tone="bad" title="Algo no cuadra" text="El tablero está lleno pero hay errores." right={<Btn kind="danger" big onClick={check}>Ver errores</Btn>} />;
 
+  const hard = path ? path.steps.map((st, k) => ({ st, k })).filter(({ st }) => st.tech !== 'naked_single' && st.tech !== 'hidden_single') : [];
+  const basicSteps = path ? path.steps.length - hard.length : 0;
+  // Sin texto del tutor ni resumen final, el tablero ocupa el centro (no deja una columna vacía).
+  const solo = !text && !doneAt;
+
   return (
     <div className="sp">
-      <div className="ex-grid">
+      <div className={`ex-grid${solo ? ' solo' : ''}`}>
         <div className="ex-tutor">
           {(text || doneAt) && <TutorBubble mood={mood}>{text}</TutorBubble>}
           {doneAt && (
             <div className="done-card">
               <div className="stat-tiles">
-                <div className="st st-yellow"><span>Tiempo</span><b>{fmt(doneAt - t0)}</b></div>
+                <div className="st st-yellow"><span>Tiempo</span><b>{fmt(doneMs)}</b></div>
                 <div className="st st-red"><span>Errores</span><b>{mistakes}</b></div>
                 <div className="st st-blue"><span>Pistas</span><b>{hintsUsed}</b></div>
               </div>
               {path && (
                 <div className="review-path">
                   <h3>Cómo se resuelve</h3>
-                  <ol>
-                    {path.steps.map((st, k) => st.tech === 'naked_single' || st.tech === 'hidden_single' ? null : (
+                  {hard.length > 0 && <ol>
+                    {hard.map(({ st, k }) => (
                       <li key={k}><button className={review === k ? 'on' : ''} onClick={() => setReview(review === k ? null : k)}>{TECH_BY_ID[st.tech].name}<small>{st.title.replace(TECH_BY_ID[st.tech].name, '').replace(/^[:\s]+/, '')}</small></button></li>
                     ))}
-                  </ol>
-                  <p className="muted small">+ {path.steps.filter(s => s.tech === 'naked_single' || s.tech === 'hidden_single').length} singles</p>
+                  </ol>}
+                  <p className="muted small">{hard.length ? `Y ${basicSteps} pasos con candidato único o lugar único.` : `Todo con técnicas básicas: ${basicSteps} pasos con candidato único o lugar único.`}</p>
                 </div>
               )}
               <div className="row-actions">
@@ -182,6 +222,7 @@ export function SudokuPlayer(p: PlayerProps) {
               </div>
               <DigitPad onDigit={d => input(d)} counts={noteMode ? undefined : counts} hl={hlD} />
               <div className="board-tools">
+                <Clock get={elapsed} />
                 <CoordHint />
                 <button className="tool-chip" onClick={() => { if (auto) { setNotes(shownCands.map((m, i) => (v[i] ? 0 : m))); } setAuto(!auto); }} aria-pressed={auto}>{auto ? 'Candidatos: auto' : 'Candidatos: a mano'}</button>
               </div>

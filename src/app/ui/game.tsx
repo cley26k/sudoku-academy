@@ -36,6 +36,8 @@ export function ToastLayer() {
   );
 }
 
+/** 1250 → «1,2k»: la cabecera móvil no crece con el saldo. */
+const short = (n: number) => (n < 1000 ? String(n) : `${(Math.floor(n / 100) / 10).toLocaleString('es')}k`);
 export function LevelGems({ compact }: { compact?: boolean }) {
   const p = useProgress();
   const lv = levelOf(xpTotal(p));
@@ -44,7 +46,7 @@ export function LevelGems({ compact }: { compact?: boolean }) {
       <span className="ts ts-level" title={`Nivel ${lv.level}: ${lv.into}/${lv.need} XP para el siguiente`}>
         <span className="lv-badge" style={{ ['--pct' as never]: `${lv.pct}%` }}>{lv.level}</span>{!compact && <small>Nivel</small>}
       </span>
-      <button className="ts ts-gems" onClick={() => go('tienda')} title="Gemas: abre la tienda"><Icon d={I.gem} size={20} stroke={2.4} /><b>{p.gems ?? 0}</b></button>
+      <button className="ts ts-gems" onClick={() => go('tienda')} title={`${p.gems ?? 0} gemas: abre la tienda`} aria-label={`${p.gems ?? 0} gemas. Abrir la tienda`}><Icon d={I.gem} size={20} stroke={2.4} /><b>{short(p.gems ?? 0)}</b></button>
     </>
   );
 }

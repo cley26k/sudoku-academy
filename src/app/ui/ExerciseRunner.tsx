@@ -23,6 +23,8 @@ export interface RunnerProps {
   onWrong?: () => void;
   onNext?: () => void; nextLabel?: string;
   header?: React.ReactNode;
+  /** false si el acierto no da XP (p. ej. la prueba de nivel): no se muestra la insignia. */
+  xp?: boolean;
 }
 
 export function ExerciseRunner(p: RunnerProps) {
@@ -88,9 +90,10 @@ export function ExerciseRunner(p: RunnerProps) {
     else if ((k === ' ' || k === 'Enter') && sel !== null && task === 'recognize') cellClick(sel, 0);
     else if (k === 'Enter' && !placeMode) check();
   }
-  function nextHint() {
+  function nextHint() { nextHintFrom(hint); }
+  function nextHintFrom(h: number) {
     if (done) return;
-    const n = Math.min(5, hint + 1);
+    const n = Math.min(5, h + 1);
     setHint(n); setFb(null); sfx('hint');
     if (n === 5) { if (!firstErr.current) firstErr.current = 'Viste la solución completa.'; setDemo(ref.frames); report(false, 5, ref.variant); }
   }
@@ -129,15 +132,16 @@ export function ExerciseRunner(p: RunnerProps) {
   }
 
   const hasSelection = task === 'recognize' ? multi.length > 0 : marks.length > 0;
-  const hintBtn = p.hints && !done && hint < 5
+  // Sin pistas (pruebas), tras dos fallos se ofrece ver la solución para no quedarse atascado.
+  const hintBtn = !done && hint < 5 && (p.hints
     ? <Btn kind="ghost" icon={I.bulb} onClick={nextHint} className="hint-btn">{hint === 4 ? 'Solución' : 'Pista'}{hint > 0 && hint < 4 && <small className="hint-n">{hint}/4</small>}</Btn>
-    : null;
+    : errors >= 2 ? <Btn kind="ghost" icon={I.eye} onClick={() => nextHintFrom(4)} className="hint-btn">Ver solución</Btn> : null);
 
   let bar: React.ReactNode;
   const firstLine = fb?.lines.find(l => l.kind === 'error') ?? fb?.lines[0];
   const extra = fb ? fb.lines.filter(l => l.kind === 'error').length - 1 : 0;
   if (done) {
-    bar = <BottomBar tone="ok" title="¡Excelente!" badge={<span className="xp-pop">+{hint ? 5 : 10} XP</span>} text={!demo ? undefined : null}
+    bar = <BottomBar tone="ok" title="¡Excelente!" badge={p.xp !== false && <span className="xp-pop">+{hint ? 5 : 10} XP</span>} text={!demo ? undefined : null}
       left={!demo ? <Btn kind="white" icon={I.play} onClick={() => setDemo(done.frames)}>Ver por qué</Btn> : <Btn kind="white" icon={I.x} onClick={() => setDemo(null)}>Cerrar</Btn>}
       right={<>{task === 'execute' && <Btn kind="white" icon={I.grid} onClick={() => setCont(true)}>Terminar sudoku</Btn>}{p.onNext && <Btn kind="success" big onClick={p.onNext}>{p.nextLabel ?? 'Continuar'}</Btn>}</>} />;
   } else if (demo) {

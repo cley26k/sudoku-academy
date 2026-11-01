@@ -1,10 +1,24 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Icon, I } from './common';
 
-export function LessonTop({ progress, onClose, right }: { progress: number; onClose: () => void; right?: React.ReactNode }) {
+/** Barra superior de lección. Con `confirm`, salir pide confirmación para no perder el progreso por error. */
+export function LessonTop({ progress, onClose, right, confirm }: { progress: number; onClose: () => void; right?: React.ReactNode; confirm?: string }) {
+  const [ask, setAsk] = useState(false);
   return (
     <div className="ltop">
-      <button className="ltop-x" onClick={onClose} aria-label="Salir"><Icon d={I.x} size={24} stroke={2.6} /></button>
+      <button className="ltop-x" onClick={() => (confirm ? setAsk(true) : onClose())} aria-label="Salir"><Icon d={I.x} size={24} stroke={2.6} /></button>
+      {ask && (
+        <div className="confirm-back" onClick={() => setAsk(false)}>
+          <div className="confirm" role="alertdialog" aria-modal="true" aria-labelledby="leave-t" onClick={e => e.stopPropagation()}>
+            <h2 id="leave-t">¿Salir de la lección?</h2>
+            <p className="muted">{confirm}</p>
+            <div className="confirm-btns">
+              <button className="btn btn-primary btn-big" autoFocus onClick={() => setAsk(false)}><span>Seguir aprendiendo</span></button>
+              <button className="btn btn-danger-ghost btn-big" onClick={onClose}><span>Salir</span></button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="lprog" role="progressbar" aria-valuenow={Math.round(progress * 100)} aria-valuemin={0} aria-valuemax={100}>
         <span style={{ width: `${Math.max(4, progress * 100)}%` }}><i /></span>
       </div>

@@ -71,7 +71,7 @@ export function findFish(s: State, n: number): Step[] {
           pattern: { cells: pat.map(p => p.cell), cands: pat }, digits: [d], variant: rowsBase ? 'row' : 'col',
           title: `${NAME[n]} del ${d} (${baseTxt})`,
           hints: [
-            { text: `Piensa en el ${d}. ¿En qué ${linesW} tiene solo dos o tres sitios posibles?`, digitFocus: d },
+            { text: `Piensa en el ${d}. ¿En qué ${linesW} tiene ${n === 2 ? 'solo dos sitios posibles' : n === 3 ? 'tres sitios posibles o menos' : 'cuatro sitios posibles o menos'}?`, digitFocus: d },
             { text: `Mira las ${baseTxt}.`, units: bo, cands: patT, digitFocus: d },
             { text: `En esas ${linesW}, el ${d} solo puede estar en las ${coverTxt}. Forman un ${NAME[n]}.`, units: [...bo, ...co], cands: patT, digitFocus: d },
             { text: `Elimina el ${d} del resto de las ${coverTxt}.`, units: [...bo, ...co], cands: [...patT, ...elT], digitFocus: d },

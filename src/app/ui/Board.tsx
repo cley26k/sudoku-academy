@@ -74,6 +74,8 @@ export function Board(p: BoardProps) {
     const mv: Record<string, number> = { ArrowUp: -9, ArrowDown: 9, ArrowLeft: -1, ArrowRight: 1 };
     if (e.key in mv) {
       e.preventDefault();
+      // La primera flecha solo selecciona la casilla central.
+      if (sel === null) { p.onMove?.(40); return; }
       let n = cur + mv[e.key];
       if (e.key === 'ArrowLeft' && colOf(cur) === 0) n = cur + 8;
       if (e.key === 'ArrowRight' && colOf(cur) === 8) n = cur - 8;
@@ -81,7 +83,9 @@ export function Board(p: BoardProps) {
       p.onMove?.(n);
       return;
     }
-    p.onKey?.(e.key, e);
+    // Con Mayúsculas, e.key es «%», «!»…: el dígito se toma de la tecla física.
+    const dg = /^(?:Digit|Numpad)([1-9])$/.exec(e.code);
+    p.onKey?.(dg ? dg[1] : e.key, e);
   }
   const live = sel !== null
     ? `${cellName(sel)}: ${p.values[sel] ? `contiene ${p.values[sel]}${p.givens[sel] ? ' (pista)' : ''}` : showC && p.cands[sel] ? `vacía, candidatos ${digitsOf(p.cands[sel]).join(' ')}` : 'vacía'}`

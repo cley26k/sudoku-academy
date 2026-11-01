@@ -1,6 +1,6 @@
 // Capa de juego: nivel, logros, misiones diarias, gemas, tienda, combos y protector de racha.
 // Todo se calcula a partir de lo que el usuario hace de verdad (no hay rivales ni datos inventados).
-import { Progress, update, xpTotal, xpToday, xpOn, dayKey, streak, mastery, getProgress, activeDays } from './store';
+import { Progress, update, xpTotal, xpToday, xpOn, dayKey, streak, mastery, getProgress, activeDays, earned } from './store';
 import { READY } from '../content/catalog';
 import { hashString } from '../engine/random';
 
@@ -18,7 +18,7 @@ const today = () => dayKey(Date.now());
 const clean = (p: Progress) => p.attempts.filter(a => a.ok && a.hints === 0 && a.kind !== 'full').length;
 export const ACHIEVEMENTS: Achievement[] = [
   { id: 'racha', name: 'En llamas', desc: 'Días seguidos practicando', icon: 'flame', tiers: [3, 7, 30], value: p => Math.max(p.bestStreak ?? 0, streak(p)) },
-  { id: 'lecciones', name: 'Erudito', desc: 'Lecciones completadas', icon: 'book', tiers: [5, 15, 28], value: p => Object.values(p.lessons).filter(l => l.done).length },
+  { id: 'lecciones', name: 'Erudito', desc: 'Lecciones completadas', icon: 'book', tiers: [5, 15, 28], value: p => earned(p).length },
   { id: 'limpio', name: 'Sin ayuda', desc: 'Ejercicios resueltos sin pistas', icon: 'check', tiers: [10, 50, 200], value: clean },
   { id: 'veloz', name: 'Ojo rápido', desc: 'Aciertos sin pistas en menos de 15 s', icon: 'bolt', tiers: [1, 10, 50], value: p => p.attempts.filter(a => a.ok && a.hints === 0 && a.ms < 15000 && a.kind !== 'full').length },
   { id: 'sudokus', name: 'Resolutor', desc: 'Sudokus completos', icon: 'grid', tiers: [1, 10, 50], value: p => p.fullSolved },
@@ -37,7 +37,7 @@ const todays = (p: Progress) => p.attempts.filter(a => dayKey(a.t) === today());
 const QUEST_POOL: Quest[] = [
   { id: 'xp', text: 'Gana 40 XP', goal: 40, value: p => xpToday(p) },
   { id: 'clean', text: 'Acierta 5 ejercicios sin pistas', goal: 5, value: p => todays(p).filter(a => a.ok && a.hints === 0 && a.kind !== 'full').length },
-  { id: 'lesson', text: 'Completa 1 lección', goal: 1, value: p => Object.values(p.lessons).filter(l => l.done && dayKey(l.t) === today()).length },
+  { id: 'lesson', text: 'Completa 1 lección', goal: 1, value: p => earned(p).filter(l => dayKey(l.t) === today()).length },
   { id: 'sudoku', text: 'Termina 1 sudoku', goal: 1, value: p => todays(p).filter(a => a.kind === 'full').length },
   { id: 'variety', text: 'Practica 3 técnicas distintas', goal: 3, value: p => new Set(todays(p).filter(a => a.kind !== 'full').map(a => a.tech)).size },
   { id: 'combo', text: 'Consigue un combo de 5', goal: 5, value: p => (p.combo?.day === today() ? p.combo.best : 0) },
@@ -58,10 +58,10 @@ export interface ShopItem { id: string; name: string; price: number; slot?: 'hat
 export const SHOP: ShopItem[] = [
   { id: 'freeze', name: 'Protector de racha', price: 50, desc: 'Si un día no practicas, tu racha no se pierde. Máximo 2.' },
   { id: 'gorra', name: 'Gorra', price: 60, slot: 'hat', desc: 'Para Tesela, con estilo.' },
+  { id: 'pajarita', name: 'Pajarita', price: 70, slot: 'neck', desc: 'Para los días de examen.' },
   { id: 'gafas', name: 'Gafas de estudio', price: 80, slot: 'face', desc: 'Para ver los patrones de lejos.' },
   { id: 'bufanda', name: 'Bufanda', price: 90, slot: 'neck', desc: 'Calentita en los sudokus largos.' },
   { id: 'auriculares', name: 'Auriculares', price: 120, slot: 'hat', desc: 'Para concentrarse con la música.' },
-  { id: 'pajarita', name: 'Pajarita', price: 70, slot: 'neck', desc: 'Para los días de examen.' },
   { id: 'corona', name: 'Corona', price: 250, slot: 'hat', desc: 'Solo para maestros.' },
 ];
 export function buy(id: string): string | null {
@@ -120,7 +120,7 @@ export function applyStreakFreeze() {
   if (!p.freezes) return;
   const d = new Date(); d.setDate(d.getDate() - 1); const y = dayKey(d.getTime());
   d.setDate(d.getDate() - 1); const yy = dayKey(d.getTime());
-  const active = new Set([...p.attempts.map(a => dayKey(a.t)), ...(p.freezeDays ?? [])]);
+  const active = activeDays(p);
   if (!active.has(y) && active.has(yy)) {
     update(pp => { pp.freezes--; pp.freezeDays = [...(pp.freezeDays ?? []), y]; });
     toast({ title: 'Protector de racha usado', text: 'Ayer no practicaste, pero tu racha sigue viva.', icon: 'shield', tone: 'quest' });

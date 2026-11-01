@@ -273,7 +273,7 @@ export function findMedusa(s: State): Step[] {
       { text: 'Esta red mezcla dos tipos de enlace fuerte: casillas con dos candidatos y números con solo dos sitios en una unidad.', cands: comp.map(n => ({ cell: nc(n), digit: nd(n), tone: 'pattern' as const })), links },
       { text: 'Píntala alternando azul y rosa: todos los azules son verdaderos, o todos los rosas.', cands: tones, links },
     ];
-    let falseColor: Node[] | null = null; let reason = '';
+    let falseColor = null as Node[] | null; let reason = '';
     for (const [grp, nm] of [[A, 'azul'], [B, 'rosa']] as [Node[], string][]) {
       for (let i = 0; i < grp.length && !falseColor; i++) for (let j = i + 1; j < grp.length && !falseColor; j++) {
         const x = grp[i], y = grp[j];

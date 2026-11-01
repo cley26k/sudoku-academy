@@ -7,6 +7,6 @@ export function go(route: string) {
 export function useRoute(): string {
   const read = () => { try { return location.hash.slice(1) || 'inicio'; } catch { return 'inicio'; } };
   const [r, setR] = useState(read);
-  useEffect(() => { const f = () => setR(read()); window.addEventListener('hashchange', f); return () => window.removeEventListener('hashchange', f); }, []);
+  useEffect(() => { const f = () => { setR(read()); try { window.scrollTo({ top: 0 }); } catch { /* noop */ } }; window.addEventListener('hashchange', f); return () => window.removeEventListener('hashchange', f); }, []);
   return r;
 }

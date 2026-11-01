@@ -9,7 +9,7 @@ export interface Mistake { id: string; t: number; tech: TechId; exId: string; ki
 export interface Session { start: number; end: number; count: number; ok: number }
 export interface Progress {
   v: 1;
-  lessons: Record<string, { done: boolean; test: boolean; t: number }>;
+  lessons: Record<string, { done: boolean; test: boolean; t: number; placed?: boolean }>;
   attempts: Attempt[];
   mistakes: Mistake[];
   sessions: Session[];
@@ -37,6 +37,7 @@ export interface Progress {
   perfect: number;                         // lecciones perfectas
   online?: { id: string; secret: string; name: string };            // cuenta de la liga (solo en este navegador)
   league?: { week: string; tier: number; xp: number; ends_at: string; t: number };  // último estado conocido
+  archive?: { xp: number; days: string[] };  // XP y días activos de intentos antiguos que ya no se guardan uno a uno
 }
 const KEY = 'sudoku-academy/v1';
 const fresh = (): Progress => ({ v: 1, lessons: {}, attempts: [], mistakes: [], sessions: [], daily: {}, settings: { streaks: true, theme: 'system', sound: true, music: false }, fullSolved: 0, chests: [], gems: 0, owned: [], equipped: {}, quests: {}, achievements: {}, levelSeen: 1, rushBest: 0, rushDays: [], freezes: 0, freezeDays: [], bonusXp: {}, combo: { day: '', best: 0 }, bestStreak: 0, dailyChests: [], streakSeen: '', perfect: 0 });
@@ -82,7 +83,12 @@ export function recordAttempt(a: Omit<Attempt, 't'>, mistakeNote?: string) {
   update(p => {
     const at: Attempt = { ...a, t: Date.now() };
     p.attempts.push(at);
-    if (p.attempts.length > 3000) p.attempts = p.attempts.slice(-3000);
+    if (p.attempts.length > 3000) {
+      // Los intentos más antiguos se resumen para que la XP total y la racha nunca bajen al recortar.
+      const old = p.attempts.slice(0, -3000), ar = p.archive ?? { xp: 0, days: [] };
+      p.archive = { xp: ar.xp + old.reduce((s, x) => s + xpFor(x), 0), days: [...new Set([...ar.days, ...old.map(x => dayKey(x.t))])] };
+      p.attempts = p.attempts.slice(-3000);
+    }
     if (!a.ok && mistakeNote && a.exId) {
       if (!p.mistakes.some(m => m.exId === a.exId && !m.resolved))
         p.mistakes.push({ id: `${at.t}-${a.exId}`, t: at.t, tech: a.tech, exId: a.exId, kind: a.kind, note: mistakeNote, resolved: false });
@@ -133,7 +139,7 @@ export function nextLesson(p: Progress): string | null {
   return order.find(id => !p.lessons[id]?.done && lessonUnlocked(p, id)) ?? null;
 }
 export function streak(p: Progress): number {
-  const days = new Set([...p.attempts.map(a => dayKey(a.t)), ...(p.freezeDays ?? [])]);
+  const days = activeDays(p);
   let n = 0; const d = new Date();
   if (!days.has(dayKey(d.getTime()))) d.setDate(d.getDate() - 1);
   while (days.has(dayKey(d.getTime()))) { n++; d.setDate(d.getDate() - 1); }
@@ -141,24 +147,30 @@ export function streak(p: Progress): number {
 }
 export function exportProgress(): string { return JSON.stringify(state); }
 export function importProgress(json: string): boolean {
-  try { const p = JSON.parse(json); if (p?.v !== 1) return false; update(() => ({ ...fresh(), ...p })); return true; } catch { return false; }
+  try { const p = JSON.parse(json); if (p?.v !== 1) return false; update(() => ({ ...fresh(), ...p, settings: { ...fresh().settings, ...p.settings } })); return true; } catch { return false; }
 }
 export function resetProgress() { update(() => fresh()); }
-export function completeLesson(id: string, test?: boolean) {
-  update(p => { const cur = p.lessons[id] ?? { done: false, test: false, t: 0 }; p.lessons[id] = { done: true, test: cur.test || !!test, t: Date.now() }; });
+/** `placed`: superada en la prueba de nivel (desbloquea, pero no da XP). Repetir una lección no mueve su fecha ni su XP. */
+export function completeLesson(id: string, test?: boolean, placed?: boolean) {
+  update(p => {
+    const cur = p.lessons[id];
+    if (cur?.done && !cur.placed) { cur.test = cur.test || !!test; return; }
+    p.lessons[id] = { done: true, test: !!cur?.test || !!test, t: Date.now(), ...(placed ? { placed: true } : {}) };
+  });
 }
+export const earned = (p: Progress) => Object.values(p.lessons).filter(l => l.done && !l.placed);
 
 // ---- XP (recompensa discreta; no afecta al cálculo de dominio) ----
 export const DAILY_GOAL = 50;
 export const xpFor = (a: Attempt) => (!a.ok ? 0 : a.kind === 'full' ? 30 : a.hints ? 5 : 10);
 export function xpOn(p: Progress, day: string): number {
   return (p.bonusXp?.[day] ?? 0) + p.attempts.filter(a => dayKey(a.t) === day).reduce((s, a) => s + xpFor(a), 0)
-    + Object.values(p.lessons).filter(l => l.done && dayKey(l.t) === day).length * 20;
+    + earned(p).filter(l => dayKey(l.t) === day).length * 20;
 }
 export const xpToday = (p: Progress) => xpOn(p, dayKey(Date.now()));
 /** Días activos (práctica real o protegidos) */
-export const activeDays = (p: Progress) => new Set([...p.attempts.map(a => dayKey(a.t)), ...(p.freezeDays ?? [])]);
+export const activeDays = (p: Progress) => new Set([...(p.archive?.days ?? []), ...p.attempts.map(a => dayKey(a.t)), ...(p.freezeDays ?? [])]);
 export function xpTotal(p: Progress): number {
-  return p.attempts.reduce((s, a) => s + xpFor(a), 0) + Object.values(p.lessons).filter(l => l.done).length * 20 + p.chests.length * 25 + Object.values(p.bonusXp ?? {}).reduce((a, b) => a + b, 0);
+  return (p.archive?.xp ?? 0) + p.attempts.reduce((s, a) => s + xpFor(a), 0) + earned(p).length * 20 + p.chests.length * 25 + Object.values(p.bonusXp ?? {}).reduce((a, b) => a + b, 0);
 }
 export function claimChest(unit: number) { update(p => { if (!p.chests.includes(unit)) p.chests.push(unit); }); }
