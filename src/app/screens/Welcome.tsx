@@ -11,12 +11,15 @@ import { LessonTop, BottomBar } from '../ui/layout';
 import type { TechId } from '../../engine/step';
 import { sfx } from '../sound';
 
+const TILE_COLORS = ['purple', 'orange', 'green', 'blue', 'pink'];
+const TILE_TILT = [-8, 6, -5, 9, -4];
+
 /** Escena con todo el elenco: Tesela al centro y sus amigos alrededor. */
 export function CastScene() {
   const tiles = [[0, 30, 3], [92, 32, 7], [93, 68, 5], [24, 82, 1], [47, 0, 9]];
   return (
     <div className="cast" aria-hidden="true">
-      {tiles.map(([x, y, d], i) => <span key={i} className="cast-tile" style={{ left: `${x}%`, top: `${y}%`, animationDelay: `${i * .4}s` }}>{d}</span>)}
+      {tiles.map(([x, y, d], i) => <span key={i} className={`cast-tile c-${TILE_COLORS[i]}`} style={{ left: `${x}%`, top: `${y}%`, animationDelay: `${i * .4}s`, rotate: `${TILE_TILT[i]}deg` }}>{d}</span>)}
       <div className="cast-item c-blue" style={{ left: '62%', top: '46%' }}><Friend kind="gemelos" size={110} /></div>
       <div className="cast-item c-orange" style={{ left: '4%', top: '48%' }}><Friend kind="pez" size={104} /></div>
       <div className="cast-item c-pink cast-fly" style={{ left: '70%', top: '0%' }}><Friend kind="ave" size={92} /></div>

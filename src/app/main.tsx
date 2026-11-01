@@ -77,7 +77,8 @@ function Screen({ route }: { route: string }) {
 function App() {
   const route = useRoute();
   const p = useProgress();
-  const focus = route.startsWith('leccion-') || route === 'nivel' || route === 'contrarreloj';
+  const welcome = route === 'inicio' && !p.welcomed && !Object.keys(p.lessons).length && !p.attempts.length;
+  const focus = welcome || route.startsWith('leccion-') || route === 'nivel' || route === 'contrarreloj';
   useEffect(() => { applyStreakFreeze(); }, []);
   // Envía el progreso a la liga al abrir y cuando cambia la XP (agrupado, sin bloquear nada).
   const xpNow = xpTotal(p);

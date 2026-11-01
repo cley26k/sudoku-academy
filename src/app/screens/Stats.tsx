@@ -26,6 +26,7 @@ export function ProgressPage() {
   const p = useProgress();
   const [io, setIo] = useState(''); const [ioMsg, setIoMsg] = useState('');
   const [confirmReset, setConfirmReset] = useState(false);
+  const [allRows, setAllRows] = useState(false);
   const days = useMemo(() => Array.from({ length: 14 }, (_, k) => { const d = new Date(); d.setDate(d.getDate() - (13 - k)); return dayKey(d.getTime()); }), []);
   const scored = p.attempts.filter(a => a.kind !== 'lesson' && a.kind !== 'full');
   const daily = days.map(d => { const xs = scored.filter(a => dayKey(a.t) === d); return xs.length ? xs.filter(a => a.ok && a.hints === 0).length / xs.length : null; });
@@ -50,13 +51,16 @@ export function ProgressPage() {
       <AchievementsGrid />
       <h2 className="h-sub">Técnicas</h2>
       <div className="mlist">
-        {rows.map(({ s, m }) => (
+        {(allRows ? rows : rows.filter(r => r.m.level !== 'nuevo')).map(({ s, m }) => (
           <button key={s.id} className={`mrow c-${UNITS_MAP.find(u => u.n === s.unit)!.color}`} onClick={() => go(`tecnica-${s.id}`)}>
             <Ring value={m.score} size={52} tone={m.level === 'dominada' ? 'green' : 'unit'}><span className="lc-abbr">{s.abbr}</span></Ring>
             <span className="lc-txt"><b>{s.name}</b><small>{LEVEL_LABEL[m.level]}{m.due ? ' · toca repasar' : ''}{m.lesson && !m.test ? ' · falta la prueba' : ''}</small></span>
             <span className={`mrow-pct${m.score ? '' : ' zero'}`}>{m.score}%</span>
           </button>
         ))}
+        {!allRows && rows.some(r => r.m.level === 'nuevo') && (
+          <button className="mrow more-row" onClick={() => setAllRows(true)}>+ {rows.filter(r => r.m.level === 'nuevo').length} técnicas por empezar</button>
+        )}
       </div>
       <details className="settings">
         <summary><Icon d={I.gear} size={18} /> Ajustes</summary>

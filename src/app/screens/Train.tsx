@@ -5,7 +5,7 @@ import { pickExercise, restrictedPuzzle, FullPuzzle } from '../bank';
 import type { LiveExercise } from '../../engine/exercise';
 import { ExerciseRunner, Task } from '../ui/ExerciseRunner';
 import { SudokuPlayer } from '../ui/SudokuPlayer';
-import { Btn, I, Icon, Segmented } from '../ui/common';
+import { Btn, I, Icon, Segmented, Toggle } from '../ui/common';
 import { Tesela } from '../ui/Tutor';
 import { recordAttempt, update, getProgress } from '../store';
 import { stateFromValues } from '../../engine/grid';
@@ -70,13 +70,13 @@ export function Train({ preset, presetTechs }: { preset?: TechId; presetTechs?: 
         );
       })}
       <div className="tc-opts">
-        <div className="tc-opt"><span>Formato</span><Segmented label="Formato" value={cfg.length} onChange={v => setCfg(c => ({ ...c, length: v }))} options={[{ v: 'short', label: 'Ejercicios' }, { v: 'full', label: 'Sudoku entero' }]} /></div>
+        <div className="tc-opt"><span>Formato</span><Segmented label="Formato" value={cfg.length} onChange={v => setCfg(c => ({ ...c, length: v }))} options={[{ v: 'short', label: 'Ejercicios' }, { v: 'full', label: 'Sudoku' }]} /></div>
         {cfg.length === 'short' && <div className="tc-opt"><span>Modo</span><Segmented label="Modo" value={cfg.task} onChange={v => setCfg(c => ({ ...c, task: v }))} options={[{ v: 'recognize', label: 'Ver' }, { v: 'deduce', label: 'Deducir' }, { v: 'execute', label: 'Resolver' }]} /></div>}
         {cfg.length === 'short' && <div className="tc-opt"><span>Dificultad</span><Segmented label="Dificultad" value={cfg.difficulty} onChange={v => setCfg(c => ({ ...c, difficulty: v }))} options={[{ v: 0, label: 'Mixta' }, { v: 1, label: '★' }, { v: 2, label: '★★' }, { v: 3, label: '★★★' }]} /></div>}
         <div className="tc-opt"><span>Ayudas</span>
-          <div className="chips">
-            <button className={`tchip${cfg.hints ? ' on' : ''}`} aria-pressed={cfg.hints} onClick={() => setCfg(c => ({ ...c, hints: !c.hints }))}>Pistas</button>
-            {cfg.length === 'short' && <button className={`tchip${cfg.cands ? ' on' : ''}`} aria-pressed={cfg.cands} onClick={() => setCfg(c => ({ ...c, cands: !c.cands }))}>Candidatos</button>}
+          <div className="tc-toggles">
+            <Toggle id="tc-hints" on={cfg.hints} onChange={v => setCfg(c => ({ ...c, hints: v }))} label="Pistas" />
+            {cfg.length === 'short' && <Toggle id="tc-cands" on={cfg.cands} onChange={v => setCfg(c => ({ ...c, cands: v }))} label="Candidatos" />}
           </div>
         </div>
       </div>

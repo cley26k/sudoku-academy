@@ -202,7 +202,7 @@ export function MomentLayer({ paused }: { paused: boolean }) {
   }, []);
   const m = paused ? null : queue[0];
   const btn = useRef<HTMLButtonElement>(null);
-  useEffect(() => { if (!m) return; celebrate(); btn.current?.focus(); }, [m]);
+  useEffect(() => { if (!m) return; celebrate(); btn.current?.focus({ focusVisible: false } as FocusOptions); }, [m]);
   if (!m) return null;
   const close = () => setQueue(q => q.slice(1));
   return (
