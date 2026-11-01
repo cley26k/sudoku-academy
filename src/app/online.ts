@@ -23,7 +23,9 @@ async function rpc<T>(fn: string, args: Record<string, unknown>): Promise<T> {
   try {
     r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
       method: 'POST',
-      headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json' },
+      // Las claves nuevas (sb_publishable_…) van solo en «apikey»; las antiguas (JWT) también como Bearer.
+      headers: SUPABASE_ANON_KEY.startsWith('sb_') ? { apikey: SUPABASE_ANON_KEY, 'Content-Type': 'application/json' }
+        : { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(args),
     });
   } catch { throw new OnlineError('offline'); }
