@@ -6,6 +6,8 @@ export interface Question { q: string; options: string[]; answer: number; why: s
 export interface Sheet {
   id: string; impl?: TechId; status: SheetStatus;
   name: string; aliases: string[]; abbr: string;
+  /** Explicación breve en español para los nombres que se usan en inglés (X-Wing, Swordfish…). */
+  gloss?: string;
   level: 'Fundamentos' | 'Intermedio' | 'Avanzado'; family: string; unit: number; difficulty: 1 | 2 | 3 | 4 | 5;
   prereqs: string[]; related: string[];
   intuition: string; principle: string; conditions: string[];
@@ -182,7 +184,7 @@ export const SHEETS: Sheet[] = [
     questions: [],
   },
   {
-    id: 'x_wing', impl: 'x_wing', status: 'ready', name: 'X-Wing', aliases: ['Pez de tamaño 2'], abbr: 'XW', level: 'Intermedio', family: 'Peces', unit: 4, difficulty: 3,
+    id: 'x_wing', impl: 'x_wing', status: 'ready', name: 'X-Wing', gloss: 'pez de dos líneas', aliases: ['Pez de tamaño 2'], abbr: 'XW', level: 'Intermedio', family: 'Peces', unit: 4, difficulty: 3,
     prereqs: ['pointing', 'claiming'], related: ['swordfish', 'simple_coloring'],
     intuition: 'Un número que en dos filas solo tiene dos sitios, y en las mismas columnas. Sea como sea, esas columnas ya tienen su número.',
     principle: 'Cada fila base debe tener el número, y solo puede ponerlo en dos columnas. Como cada columna admite un único ejemplar, las dos filas ocupan las dos columnas, una cada una. Esas columnas ya tienen su número dentro de las filas base, así que fuera de ellas se elimina.',
@@ -202,7 +204,7 @@ export const SHEETS: Sheet[] = [
     ],
   },
   {
-    id: 'swordfish', impl: 'swordfish', status: 'ready', name: 'Swordfish', aliases: ['Pez de tamaño 3'], abbr: 'SF', level: 'Intermedio', family: 'Peces', unit: 4, difficulty: 4,
+    id: 'swordfish', impl: 'swordfish', status: 'ready', name: 'Swordfish', gloss: 'pez espada · tres líneas', aliases: ['Pez de tamaño 3'], abbr: 'SF', level: 'Intermedio', family: 'Peces', unit: 4, difficulty: 4,
     prereqs: ['x_wing'], related: ['x_wing', 'jellyfish'],
     intuition: 'Como el X-Wing, pero con tres filas: el número solo cabe en tres columnas en total, así que esas columnas quedan servidas.',
     principle: 'Tres filas deben colocar el número y, entre todas, solo disponen de tres columnas. Tres números en tres columnas distintas: cada columna recibe exactamente uno de ellos. Fuera de las filas base, esas columnas no pueden tener el número.',
@@ -217,7 +219,7 @@ export const SHEETS: Sheet[] = [
     ],
   },
   {
-    id: 'jellyfish', impl: 'jellyfish', status: 'ready', name: 'Jellyfish', aliases: ['Pez de tamaño 4'], abbr: 'JF', level: 'Avanzado', family: 'Peces', unit: 4, difficulty: 5,
+    id: 'jellyfish', impl: 'jellyfish', status: 'ready', name: 'Jellyfish', gloss: 'medusa · cuatro líneas', aliases: ['Pez de tamaño 4'], abbr: 'JF', level: 'Avanzado', family: 'Peces', unit: 4, difficulty: 5,
     prereqs: ['swordfish'], related: ['swordfish'],
     intuition: 'El mismo truco del X-Wing con cuatro filas y cuatro columnas.',
     principle: 'Cuatro filas deben colocar el número y solo disponen de cuatro columnas: esas columnas quedan cubiertas por las filas base.',
@@ -229,7 +231,7 @@ export const SHEETS: Sheet[] = [
     questions: [],
   },
   {
-    id: 'y_wing', impl: 'y_wing', status: 'ready', name: 'Y-Wing', aliases: ['XY-Wing'], abbr: 'YW', level: 'Intermedio', family: 'Alas', unit: 5, difficulty: 3,
+    id: 'y_wing', impl: 'y_wing', status: 'ready', name: 'Y-Wing', gloss: 'ala Y · tres casillas de dos candidatos', aliases: ['XY-Wing'], abbr: 'YW', level: 'Intermedio', family: 'Alas', unit: 5, difficulty: 3,
     prereqs: ['naked_pair'], related: ['xyz_wing', 'w_wing'],
     intuition: 'Una casilla (pivote) con dos opciones ve a dos «pinzas». Sea lo que sea el pivote, una pinza acaba siendo el mismo número.',
     principle: 'Pivote {A,B}, pinzas {A,C} y {B,C}, ambas vistas por el pivote. Si el pivote es A, la pinza {A,C} es C; si es B, la pinza {B,C} es C. Una de las pinzas es C, así que cualquier casilla que vea a las dos no puede ser C.',
@@ -247,7 +249,7 @@ export const SHEETS: Sheet[] = [
     ],
   },
   {
-    id: 'xyz_wing', impl: 'xyz_wing', status: 'ready', name: 'XYZ-Wing', aliases: [], abbr: 'XZ', level: 'Intermedio', family: 'Alas', unit: 5, difficulty: 4,
+    id: 'xyz_wing', impl: 'xyz_wing', status: 'ready', name: 'XYZ-Wing', gloss: 'ala XYZ · un pivote de tres candidatos', aliases: [], abbr: 'XZ', level: 'Intermedio', family: 'Alas', unit: 5, difficulty: 4,
     prereqs: ['y_wing'], related: ['y_wing'],
     intuition: 'Como el Y-Wing, pero el pivote también puede ser el número común. Solo se borra donde se ven las tres casillas.',
     principle: 'Pivote {A,B,C}, pinzas {A,C} y {B,C}. Si el pivote es C, la C está en el pivote; si es A o B, la C está en una pinza. La C está en una de las tres casillas, así que solo se elimina de casillas que ven a las tres.',
@@ -261,7 +263,7 @@ export const SHEETS: Sheet[] = [
     ],
   },
   {
-    id: 'w_wing', impl: 'w_wing', status: 'ready', name: 'W-Wing', aliases: [], abbr: 'WW', level: 'Intermedio', family: 'Alas', unit: 5, difficulty: 4,
+    id: 'w_wing', impl: 'w_wing', status: 'ready', name: 'W-Wing', gloss: 'ala W · dos pares unidos por un enlace', aliases: [], abbr: 'WW', level: 'Intermedio', family: 'Alas', unit: 5, difficulty: 4,
     prereqs: ['y_wing', 'x_wing'], related: ['y_wing', 'simple_coloring'],
     intuition: 'Dos casillas iguales de dos opciones (por ejemplo 4 o 9), unidas por un número que solo tiene dos sitios en una fila. Al menos una es 4.',
     principle: 'Si ninguna de las dos fuera X, ambas serían Y. Pero hay una unidad donde el Y solo tiene dos sitios, y cada uno ve a una de las casillas: ambos sitios quedarían bloqueados y esa unidad se quedaría sin Y. Por tanto, al menos una de las dos casillas es X.',
@@ -347,7 +349,7 @@ export const SHEETS: Sheet[] = [
     mastery: MASTERY, intro: 'Más formas de usar que la solución es única.', variants: { tipo2: 'Tipo 2', tipo4: 'Tipo 4' }, questions: [],
   },
   {
-    id: 'bug1', impl: 'bug1', status: 'ready', name: 'BUG+1', aliases: ['Bivalue Universal Grave'], abbr: 'BG', level: 'Avanzado', family: 'Unicidad', unit: 6, difficulty: 3,
+    id: 'bug1', impl: 'bug1', status: 'ready', name: 'BUG+1', gloss: 'tumba de pares + 1', aliases: ['Bivalue Universal Grave'], abbr: 'BG', level: 'Avanzado', family: 'Unicidad', unit: 6, difficulty: 3,
     prereqs: ['unique_rect1'], related: ['unique_rect_plus'],
     intuition: 'Todas las casillas vacías tienen dos candidatos menos una, que tiene tres. Esa casilla decide.',
     principle: 'SUPUESTO: solución única. Si todo el tablero quedara en parejas (cada número dos veces por unidad), tendría varias soluciones o ninguna. La casilla de tres candidatos debe ser el número que rompe esa simetría: el que aparece tres veces en sus unidades.',
@@ -356,7 +358,7 @@ export const SHEETS: Sheet[] = [
     mastery: MASTERY, intro: 'Un truco de final de partida.', variants: { bug: 'BUG+1' }, questions: [],
   },
   {
-    id: 'x_chain', impl: 'x_chain', status: 'ready', name: 'X-Chain', aliases: ['X-Cycles (cadena abierta)', 'Skyscraper', '2-String Kite', 'Turbot Fish'], abbr: 'XC', level: 'Avanzado', family: 'Cadenas', unit: 7, difficulty: 4,
+    id: 'x_chain', impl: 'x_chain', status: 'ready', name: 'X-Chain', gloss: 'cadena de un solo número', aliases: ['X-Cycles (cadena abierta)', 'Skyscraper', '2-String Kite', 'Turbot Fish'], abbr: 'XC', level: 'Avanzado', family: 'Cadenas', unit: 7, difficulty: 4,
     prereqs: ['simple_coloring'], related: ['simple_coloring', 'aic'],
     intuition: 'Sigue un número saltando de casilla en casilla: «si no está aquí, está allí», «si está aquí, no está allí». Uno de los extremos es seguro.',
     principle: 'Empieza y termina con un enlace fuerte. Si el primer extremo es falso, la cadena obliga a que el último sea verdadero. Así que al menos uno de los dos extremos tiene el número, y quien vea a ambos lo pierde. Skyscraper, 2-String Kite y Turbot son X-Chains cortas.',
@@ -366,7 +368,7 @@ export const SHEETS: Sheet[] = [
     questions: [{ q: 'En una X-Chain, ¿qué sabemos de los extremos?', options: ['Los dos tienen el número', 'Al menos uno tiene el número', 'Ninguno lo tiene'], answer: 1, why: 'Si uno es falso, la cadena hace verdadero al otro.' }],
   },
   {
-    id: 'xy_chain', impl: 'xy_chain', status: 'ready', name: 'XY-Chain', aliases: ['Cadena XY'], abbr: 'XY', level: 'Avanzado', family: 'Cadenas', unit: 7, difficulty: 4,
+    id: 'xy_chain', impl: 'xy_chain', status: 'ready', name: 'XY-Chain', gloss: 'cadena de casillas con dos candidatos', aliases: ['Cadena XY'], abbr: 'XY', level: 'Avanzado', family: 'Cadenas', unit: 7, difficulty: 4,
     prereqs: ['y_wing'], related: ['y_wing', 'aic'],
     intuition: 'Un Y-Wing estirado: una fila de casillas de dos candidatos que se pasan un número como una cadena de fichas.',
     principle: 'Si la primera casilla no es z, es el otro número, que obliga a la siguiente, y así hasta la última, que termina siendo z. O la primera es z o la última lo es: quien vea a ambas pierde el z.',
@@ -384,7 +386,7 @@ export const SHEETS: Sheet[] = [
     mastery: MASTERY, intro: 'Dos cadenas que se vigilan.', variants: { trampa: 'Trampa' }, questions: [],
   },
   {
-    id: 'medusa', impl: 'medusa', status: 'ready', name: '3D Medusa', aliases: ['Medusa'], abbr: 'MD', level: 'Avanzado', family: 'Cadenas', unit: 7, difficulty: 5,
+    id: 'medusa', impl: 'medusa', status: 'ready', name: '3D Medusa', gloss: 'coloreado en tres dimensiones', aliases: ['Medusa'], abbr: 'MD', level: 'Avanzado', family: 'Cadenas', unit: 7, difficulty: 5,
     prereqs: ['simple_coloring', 'xy_chain'], related: ['multi_coloring', 'aic'],
     intuition: 'Coloreado que pinta varios números a la vez: salta dentro de casillas de dos opciones y por números con dos sitios.',
     principle: 'Todos los azules son verdaderos o todos los rosas. Un color es falso si pone dos números en una casilla o el mismo número dos veces en una unidad. Un candidato sin color sobra si ve ambos colores de su número, si su casilla tiene ambos colores, o si su casilla tiene un color y ve el otro color de su número.',
@@ -393,7 +395,7 @@ export const SHEETS: Sheet[] = [
     mastery: MASTERY, intro: 'El coloreado en tres dimensiones.', variants: { 'color falso': 'Color falso', trampa: 'Trampa' }, questions: [],
   },
   {
-    id: 'aic', impl: 'aic', status: 'ready', name: 'AIC', aliases: ['Alternating Inference Chains', 'Cadenas de inferencia alterna'], abbr: 'AI', level: 'Avanzado', family: 'Cadenas', unit: 7, difficulty: 5,
+    id: 'aic', impl: 'aic', status: 'ready', name: 'AIC', gloss: 'cadena de inferencias alternas', aliases: ['Alternating Inference Chains', 'Cadenas de inferencia alterna'], abbr: 'AI', level: 'Avanzado', family: 'Cadenas', unit: 7, difficulty: 5,
     prereqs: ['x_chain', 'xy_chain'], related: ['x_chain', 'xy_chain', 'medusa'],
     intuition: 'La cadena más general: mezcla números y casillas. Mientras alternes fuerte y débil, la lógica se sostiene.',
     principle: 'Si el primer candidato es falso, la cadena obliga a que el último sea verdadero. Si los extremos son el mismo número, quien vea a ambos lo pierde. Si están en la misma casilla, el resto de sus candidatos sobra. Si son números distintos en casillas que se ven, cada extremo pierde el número del otro.',

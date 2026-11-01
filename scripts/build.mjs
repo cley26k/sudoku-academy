@@ -24,7 +24,7 @@ console.log('js', (js.length / 1024).toFixed(0) + 'KB', 'total', ((head.length +
 mkdirSync('dist-site', { recursive: true });
 const pwaHead = `<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#1b2030" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes">`;
 const swReg = `<script>if('serviceWorker' in navigator&&location.protocol!=='file:'){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
-navigator.serviceWorker.addEventListener('message',e=>{if(e.data!=='sa-update'||document.getElementById('sa-upd'))return;const b=document.createElement('button');b.id='sa-upd';b.className='update-pill';b.textContent='Nueva versión disponible · Actualizar';b.onclick=()=>location.reload();document.body.appendChild(b)})}</script>`;
+navigator.serviceWorker.addEventListener('message',e=>{if(e.data!=='sa-update'||document.getElementById('sa-upd'))return;const b=document.createElement('button');b.id='sa-upd';b.className='update-pill';b.innerHTML='<span>Nueva versión · <u>Actualizar</u></span><i aria-label="Cerrar" role="button">×</i>';b.onclick=ev=>{if(ev.target.tagName==='I')b.remove();else location.reload()};document.body.appendChild(b)})}</script>`;
 writeFileSync('dist-site/index.html', `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">${pwaHead}${head}</head><body>${body}${swReg}</body></html>`);
 const ver = Date.now().toString(36);
 writeFileSync('dist-site/sw.js', `const C='sa-${ver}';
@@ -42,7 +42,7 @@ if(hit){e.waitUntil(net.catch(()=>{}));return hit}return net}));return}
 if(u.origin!==location.origin&&!/fonts\\.(googleapis|gstatic)\\.com$/.test(u.hostname))return;
 e.respondWith(caches.match(q).then(hit=>{const net=fetch(q).then(r=>keep(q,r)).catch(()=>hit);return hit||net}))});
 `);
-writeFileSync('dist-site/manifest.webmanifest', JSON.stringify({ name: 'Sudoku Academy', short_name: 'Sudoku Academy', description: 'Aprende a razonar en Sudoku, técnica a técnica.', lang: 'es', start_url: './', scope: './', display: 'standalone', background_color: '#ffffff', theme_color: '#7c5cff', icons: [{ src: 'icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' }, { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' }] }, null, 2));
+writeFileSync('dist-site/manifest.webmanifest', JSON.stringify({ name: 'Sudoku Academy', short_name: 'Sudoku Academy', description: 'Aprende a razonar en Sudoku, técnica a técnica.', lang: 'es', start_url: './', scope: './', display: 'standalone', background_color: '#ffffff', theme_color: '#ffffff', icons: [{ src: 'icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' }, { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' }] }, null, 2));
 writeFileSync('dist-site/.nojekyll', '');
 // GitHub Pages publica desde main /docs: se copia el sitio tal cual.
 cpSync('dist-site', 'docs', { recursive: true });

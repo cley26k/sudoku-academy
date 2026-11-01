@@ -88,7 +88,7 @@ export function Rush() {
     </div>
   );
   return ex ? (
-    <ExerciseRunner key={ex.id} ex={ex} task="deduce" hints={false} header={header} title="¡Rápido!"
+    <ExerciseRunner key={ex.id} ex={ex} task="deduce" hints={false} reveal={false} header={header} title="¡Rápido!"
       onWrong={() => { if (ended.current) return; setLives(l => { const n = l - 1; if (n <= 0) window.setTimeout(() => end(scoreRef.current), 600); return n; }); }}
       onResult={r => {
         if (ended.current || lives <= 0) return;

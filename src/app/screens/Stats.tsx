@@ -62,13 +62,15 @@ export function ProgressPage() {
         <summary><Icon d={I.gear} size={18} /> Ajustes</summary>
         <Toggle id="set-streak" on={p.settings.streaks} onChange={v => update(pp => { pp.settings.streaks = v; })} label="Mostrar rachas" />
         <Toggle id="set-sound" on={p.settings.sound} onChange={v => update(pp => { pp.settings.sound = v; })} label="Efectos de sonido" />
-        <div className="seg" role="radiogroup" aria-label="Tema">
-          <span className="seg-lbl">Tema</span>
-          {([['system', 'Automático'], ['light', 'Claro'], ['dark', 'Oscuro']] as const).map(([v, l]) => (
-            <button key={v} role="radio" aria-checked={p.settings.theme === v} className={p.settings.theme === v ? 'on' : ''} onClick={() => update(pp => { pp.settings.theme = v; })}>{l}</button>
-          ))}
-        </div>
         <Toggle id="set-music" on={p.settings.music} onChange={v => { update(pp => { pp.settings.music = v; }); setMusic(v); }} label="Música de fondo" />
+        <div className="set-row">
+          <span id="theme-l">Tema</span>
+          <div className="seg" role="radiogroup" aria-labelledby="theme-l">
+            {([['system', 'Auto'], ['light', 'Claro'], ['dark', 'Oscuro']] as const).map(([v, l]) => (
+              <button key={v} role="radio" aria-checked={p.settings.theme === v} className={p.settings.theme === v ? 'on' : ''} onClick={() => update(pp => { pp.settings.theme = v; })}>{l}</button>
+            ))}
+          </div>
+        </div>
         <p className="small muted">El dominio cuenta precisión sin pistas, variedad de casos y días distintos, no solo cantidad.</p>
         <div className="row-actions">
           <Btn onClick={() => { const t = exportProgress(); setIo(t); navigator.clipboard?.writeText(t).then(() => setIoMsg('Copiado.'), () => setIoMsg('Copia el texto de abajo.')); }}>Exportar</Btn>

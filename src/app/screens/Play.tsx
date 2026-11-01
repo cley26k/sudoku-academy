@@ -9,6 +9,7 @@ import { Tesela } from '../ui/Tutor';
 import { stateFromValues } from '../../engine/grid';
 import { update, dayKey, recordAttempt, useProgress } from '../store';
 import { go } from '../router';
+import { ConfirmSheet } from '../ui/layout';
 
 const COLORS = ['green', 'blue', 'orange', 'red'];
 
@@ -36,6 +37,7 @@ export function Play({ daily }: { daily?: boolean }) {
   const dailyPz = useMemo(() => (daily ? dailyPuzzle(today) : null), [daily, today]);
   const dailyDone = p.daily[today]?.done;
   const [replay, setReplay] = useState(false);
+  const [askNew, setAskNew] = useState<string | null>(null);
   const [doneOnEntry] = useState(!!dailyDone);
   const cur = daily ? dailyPz : pz;
 
@@ -60,13 +62,12 @@ export function Play({ daily }: { daily?: boolean }) {
       {stored && (
         <button className="level-card c-teal continue-card" onClick={cont}>
           <Icon d={I.play} size={28} />
-          <b>Continuar partida</b>
-          <small>{LEVELS.find(l => l.id === stored.lv)?.label} · {fmt(stored.game.ms)} jugados</small>
+          <span><b>Continuar partida</b><small>{LEVELS.find(l => l.id === stored.lv)?.label} · {fmt(stored.game.ms)} jugados</small></span>
         </button>
       )}
       <div className="level-grid">
         {LEVELS.map((l, i) => (
-          <button key={l.id} className={`level-card c-${COLORS[i]}`} onClick={() => start(l.id)}>
+          <button key={l.id} className={`level-card c-${COLORS[i]}`} onClick={() => (stored ? setAskNew(l.id) : start(l.id))}>
             <span className="lv-stars" aria-label={`${i + 1} de 4`}>{'★'.repeat(i + 1)}</span>
             <b>{l.label}</b>
             <small>{l.blurb}</small>
@@ -78,19 +79,21 @@ export function Play({ daily }: { daily?: boolean }) {
           <small>{dailyDone ? `Hecho hoy en ${fmt(p.daily[today].ms)}` : 'Uno nuevo cada día'}</small>
         </button>
       </div>
+      {askNew && <ConfirmSheet title="¿Empezar un sudoku nuevo?" text="Perderás la partida que tienes a medias." stay="Seguir con la mía" leave="Empezar nuevo"
+        onStay={() => { setAskNew(null); cont(); }} onLeave={() => { const l = askNew; setAskNew(null); start(l); }} />}
     </div>
   );
 
   const bar = (
-    <div className="train-bar">
+    <>
       <button className="ltop-x" onClick={() => { if (daily) go('sudoku'); else { setPz(null); setStored(loadGame(slot)); window.scrollTo({ top: 0 }); } }} aria-label="Volver"><Icon d={I.back} size={22} stroke={2.6} /></button>
       <div className="tb-techs"><span className="chip">{daily ? `Reto del ${dateLabel(Date.now())}` : LEVELS.find(l => l.id === lv)?.label}</span></div>
-    </div>
+    </>
   );
 
   // El reto diario cuenta una sola vez: si ya está hecho, se muestra el resultado (y se puede repetir sin premio).
   if (daily && doneOnEntry && !replay) return (
-    <div className="playpage">{bar}
+    <div className="playpage"><div className="train-bar">{bar}</div>
       <div className="empty-state">
         <Tesela mood="happy" size={110} />
         <h2>¡Reto de hoy completado!</h2>
@@ -104,8 +107,8 @@ export function Play({ daily }: { daily?: boolean }) {
   );
 
   return (
-    <div className="playpage">{bar}
-      <SudokuPlayer key={cur.id + n + (replay ? 'r' : '')} initial={stateFromValues(cur.givens)} givens={cur.givens.map(x => x > 0)} solution={cur.solution} allowed="all"
+    <div className="playpage">
+      <SudokuPlayer bar={bar} practice={daily && replay} key={cur.id + n + (replay ? 'r' : '')} initial={stateFromValues(cur.givens)} givens={cur.givens.map(x => x > 0)} solution={cur.solution} allowed="all"
         autoCands={!daily && lv !== 'facil'} saved={replay ? null : resume} onSave={replay ? undefined : onSave}
         onComplete={r => {
           if (daily && (replay || dailyDone)) return;

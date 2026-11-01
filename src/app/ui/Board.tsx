@@ -83,9 +83,9 @@ export function Board(p: BoardProps) {
       p.onMove?.(n);
       return;
     }
-    // Con Mayúsculas, e.key es «%», «!»…: el dígito se toma de la tecla física.
+    // Con Mayúsculas en QWERTY, e.key es «%», «!»…: entonces el dígito se toma de la tecla física (en AZERTY e.key ya es el dígito).
     const dg = /^(?:Digit|Numpad)([1-9])$/.exec(e.code);
-    p.onKey?.(dg ? dg[1] : e.key, e);
+    p.onKey?.(/^[1-9]$/.test(e.key) || !dg ? e.key : dg[1], e);
   }
   const live = sel !== null
     ? `${cellName(sel)}: ${p.values[sel] ? `contiene ${p.values[sel]}${p.givens[sel] ? ' (pista)' : ''}` : showC && p.cands[sel] ? `vacía, candidatos ${digitsOf(p.cands[sel]).join(' ')}` : 'vacía'}`

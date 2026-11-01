@@ -25,6 +25,8 @@ export interface RunnerProps {
   header?: React.ReactNode;
   /** false si el acierto no da XP (p. ej. la prueba de nivel): no se muestra la insignia. */
   xp?: boolean;
+  /** false donde no se puede ver la solución (contrarreloj, prueba de nivel). */
+  reveal?: boolean;
 }
 
 export function ExerciseRunner(p: RunnerProps) {
@@ -45,10 +47,12 @@ export function ExerciseRunner(p: RunnerProps) {
   const reported = useRef(false);
   const t0 = useRef(Date.now());
   const firstErr = useRef<string | undefined>(undefined);
+  // Repetir exactamente la misma respuesta errónea no cuenta como un fallo nuevo.
+  const wrongSeen = useRef(new Set<string>());
 
   useEffect(() => {
     setSel(null); setMarks([]); setMulti([]); setHint(0); setFb(null); setErrors(0); setDone(null); setDemo(null); setCont(false);
-    setShowC(p.showCands !== false); reported.current = false; t0.current = Date.now(); firstErr.current = undefined;
+    setShowC(p.showCands !== false); reported.current = false; t0.current = Date.now(); firstErr.current = undefined; wrongSeen.current.clear();
   }, [ex.id, task]);
 
   const ctl = useFrames(demo ?? [], true);
@@ -59,15 +63,17 @@ export function ExerciseRunner(p: RunnerProps) {
     reported.current = true;
     p.onResult?.({ ok, hints: h, errors, ms: Date.now() - t0.current, note: firstErr.current, variant });
   }
-  function onFeedback(f: Feedback) {
+  function onFeedback(f: Feedback, answer: string) {
     setFb(f);
     sfx(f.status === 'correct' ? 'correct' : f.status === 'wrong' ? 'wrong' : f.status === 'empty' ? 'tap' : 'partial');
-    if (f.status === 'wrong') { p.onWrong?.(); setErrors(e => e + 1); if (!firstErr.current) firstErr.current = f.lines.find(l => l.kind === 'error')?.text ?? f.title; }
+    if (f.status === 'wrong' && wrongSeen.current.has(answer)) return;
+    if (f.status === 'wrong') { wrongSeen.current.add(answer); p.onWrong?.(); setErrors(e => e + 1); if (!firstErr.current) firstErr.current = f.lines.find(l => l.kind === 'error')?.text ?? f.title; }
     if (f.status === 'correct') { const st = f.matched ?? ex.steps[0]; setDone(st); celebrate(); report(true, hint, st.variant); }
   }
   function check() {
     if (done) return;
-    onFeedback(task === 'recognize' ? gradeRecognition(ex, multi) : gradeEliminations(ex, marks));
+    onFeedback(task === 'recognize' ? gradeRecognition(ex, multi) : gradeEliminations(ex, marks),
+      task === 'recognize' ? [...multi].sort((a, b) => a - b).join() : marks.map(cdKey).sort((a, b) => a - b).join());
   }
   function cellClick(cell: number, sub: number) {
     setSel(cell);
@@ -82,7 +88,7 @@ export function ExerciseRunner(p: RunnerProps) {
   }
   function digit(d: number) {
     if (sel === null || done) return;
-    if (placeMode) { if (!ex.state.v[sel]) onFeedback(gradePlacement(ex, sel, d)); }
+    if (placeMode) { if (!ex.state.v[sel]) onFeedback(gradePlacement(ex, sel, d), `p${sel * 10 + d}`); }
     else if (task !== 'recognize') toggleMark(sel, d);
   }
   function key(k: string) {
@@ -135,7 +141,7 @@ export function ExerciseRunner(p: RunnerProps) {
   // Sin pistas (pruebas), tras dos fallos se ofrece ver la solución para no quedarse atascado.
   const hintBtn = !done && hint < 5 && (p.hints
     ? <Btn kind="ghost" icon={I.bulb} onClick={nextHint} className="hint-btn">{hint === 4 ? 'Solución' : 'Pista'}{hint > 0 && hint < 4 && <small className="hint-n">{hint}/4</small>}</Btn>
-    : errors >= 2 ? <Btn kind="ghost" icon={I.eye} onClick={() => nextHintFrom(4)} className="hint-btn">Ver solución</Btn> : null);
+    : errors >= 2 && p.reveal !== false ? <Btn kind="ghost" icon={I.eye} onClick={() => nextHintFrom(4)} className="hint-btn">Ver solución</Btn> : null);
 
   let bar: React.ReactNode;
   const firstLine = fb?.lines.find(l => l.kind === 'error') ?? fb?.lines[0];
@@ -145,7 +151,7 @@ export function ExerciseRunner(p: RunnerProps) {
       left={!demo ? <Btn kind="white" icon={I.play} onClick={() => setDemo(done.frames)}>Ver por qué</Btn> : <Btn kind="white" icon={I.x} onClick={() => setDemo(null)}>Cerrar</Btn>}
       right={<>{task === 'execute' && <Btn kind="white" icon={I.grid} onClick={() => setCont(true)}>Terminar sudoku</Btn>}{p.onNext && <Btn kind="success" big onClick={p.onNext}>{p.nextLabel ?? 'Continuar'}</Btn>}</>} />;
   } else if (demo) {
-    bar = <BottomBar tone="info" title="Así se resuelve" text="Inténtalo tú en el siguiente." right={p.onNext && <Btn kind="primary" big onClick={p.onNext}>{p.nextLabel ?? 'Continuar'}</Btn>} />;
+    bar = <BottomBar tone="info" title="Así se resuelve" text={p.onNext ? 'Inténtalo tú en el siguiente.' : undefined} right={p.onNext ? <Btn kind="primary" big onClick={p.onNext}>{p.nextLabel ?? 'Continuar'}</Btn> : <Btn kind="primary" big onClick={() => setDemo(null)}>Cerrar</Btn>} />;
   } else if (fb && fb.status !== 'empty') {
     const tone = fb.status === 'wrong' ? 'bad' : 'warn';
     bar = <BottomBar tone={tone} title={fb.status === 'wrong' ? 'Casi…' : fb.status === 'partial' ? '¡Vas bien!' : 'Mmm…'}

@@ -37,7 +37,8 @@ export interface Progress {
   perfect: number;                         // lecciones perfectas
   online?: { id: string; secret: string; name: string };            // cuenta de la liga (solo en este navegador)
   league?: { week: string; tier: number; xp: number; ends_at: string; t: number };  // último estado conocido
-  archive?: { xp: number; days: string[] };  // XP y días activos de intentos antiguos que ya no se guardan uno a uno
+  archive?: { xp: number; days: string[] };
+  placedChests?: number[];  // unidades superadas en la prueba de nivel: su cofre se da por abierto, sin XP  // XP y días activos de intentos antiguos que ya no se guardan uno a uno
 }
 const KEY = 'sudoku-academy/v1';
 const fresh = (): Progress => ({ v: 1, lessons: {}, attempts: [], mistakes: [], sessions: [], daily: {}, settings: { streaks: true, theme: 'system', sound: true, music: false }, fullSolved: 0, chests: [], gems: 0, owned: [], equipped: {}, quests: {}, achievements: {}, levelSeen: 1, rushBest: 0, rushDays: [], freezes: 0, freezeDays: [], bonusXp: {}, combo: { day: '', best: 0 }, bestStreak: 0, dailyChests: [], streakSeen: '', perfect: 0 });
@@ -149,7 +150,11 @@ export function exportProgress(): string { return JSON.stringify(state); }
 export function importProgress(json: string): boolean {
   try { const p = JSON.parse(json); if (p?.v !== 1) return false; update(() => ({ ...fresh(), ...p, settings: { ...fresh().settings, ...p.settings } })); return true; } catch { return false; }
 }
-export function resetProgress() { update(() => fresh()); }
+export function resetProgress() {
+  // También se borran las partidas de sudoku guardadas.
+  try { for (const k of Object.keys(localStorage)) if (k.startsWith('sudoku-academy/game/')) localStorage.removeItem(k); } catch { /* sin almacenamiento */ }
+  update(() => fresh());
+}
 /** `placed`: superada en la prueba de nivel (desbloquea, pero no da XP). Repetir una lección no mueve su fecha ni su XP. */
 export function completeLesson(id: string, test?: boolean, placed?: boolean) {
   update(p => {

@@ -17,6 +17,10 @@ export interface PlayerProps {
   onNext?: () => void; nextLabel?: string; onMistake?: (note: string) => void;
   /** Partida guardada de la que continuar y aviso de cada cambio (null al terminar). */
   saved?: SavedGame | null; onSave?: (g: SavedGame | null) => void;
+  /** Contenido de la barra superior (volver, nivel); el cronómetro se añade a la derecha. */
+  bar?: React.ReactNode;
+  /** Repetición sin premio: sin celebración y con el aviso correspondiente. */
+  practice?: boolean;
 }
 export interface SavedGame { v: number[]; elims: number[]; notes: number[]; auto: boolean; mistakes: number; counted: number[]; hints: number; ms: number }
 interface Snap { v: number[]; elims: number[]; notes: number[] }
@@ -80,7 +84,7 @@ export function SudokuPlayer(p: PlayerProps) {
   useEffect(() => {
     if (complete && doneAt === null) {
       const ms = elapsed();
-      setDoneAt(Date.now()); setDoneMs(ms); celebrate(); sfx('complete');
+      setDoneAt(Date.now()); setDoneMs(ms); if (!p.practice) { celebrate(); sfx('complete'); }
       p.onSave?.(null);
       p.onComplete?.({ ms, mistakes, hints: hintsUsed, used: [...solveHuman(p.initial, p.allowed).used] });
     }
@@ -138,7 +142,7 @@ export function SudokuPlayer(p: PlayerProps) {
     setHint(null); setDemo(null); sfx('place');
   }
   function key(k: string, e: React.KeyboardEvent) {
-    if (/^[1-9]$/.test(k)) { e.preventDefault(); input(+k, e.shiftKey ? true : undefined); }
+    if (/^[1-9]$/.test(k)) { e.preventDefault(); input(+k, e.shiftKey && !/^[1-9]$/.test(e.key) ? true : undefined); }
     else if (k === 'Backspace' || k === 'Delete' || k === '0') erase();
     else if (k.toLowerCase() === 'n') setNoteMode(m => !m);
     else if (k.toLowerCase() === 'z' && (e.ctrlKey || e.metaKey)) undo();
@@ -154,7 +158,7 @@ export function SudokuPlayer(p: PlayerProps) {
   else if (hint?.step) overlays.push(hint.step.hints[hint.level - 1]);
 
   let mood: Mood = 'idle', text: React.ReactNode = p.intro ?? null;
-  if (doneAt) { mood = 'happy'; text = '¡Lo resolviste!'; }
+  if (doneAt) { mood = 'happy'; text = p.practice ? 'Resuelto. Era una repetición: no suma premio.' : '¡Lo resolviste!'; }
   if ((review !== null || demo) && ctl.frame) { mood = 'point'; text = ctl.frame.text; }
   else if (hint) mood = hint.wrongCell !== undefined ? 'oops' : 'think';
 
@@ -179,6 +183,7 @@ export function SudokuPlayer(p: PlayerProps) {
 
   return (
     <div className="sp">
+      {p.bar && <div className="train-bar">{p.bar}{!doneAt && <Clock get={elapsed} />}</div>}
       <div className={`ex-grid${solo ? ' solo' : ''}`}>
         <div className="ex-tutor">
           {(text || doneAt) && <TutorBubble mood={mood}>{text}</TutorBubble>}
@@ -222,8 +227,8 @@ export function SudokuPlayer(p: PlayerProps) {
               </div>
               <DigitPad onDigit={d => input(d)} counts={noteMode ? undefined : counts} hl={hlD} />
               <div className="board-tools">
-                <Clock get={elapsed} />
-                <CoordHint />
+                {!p.bar && <Clock get={elapsed} />}
+                <span className="hide-sm"><CoordHint /></span>
                 <button className="tool-chip" onClick={() => { if (auto) { setNotes(shownCands.map((m, i) => (v[i] ? 0 : m))); } setAuto(!auto); }} aria-pressed={auto}>{auto ? 'Candidatos: auto' : 'Candidatos: a mano'}</button>
               </div>
             </>

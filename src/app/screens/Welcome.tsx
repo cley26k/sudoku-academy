@@ -56,6 +56,7 @@ export function Placement() {
     const top = passed === 0 ? 0 : sheetForTech(STAGES[passed - 1]).unit;
     // Las lecciones superadas en la prueba se desbloquean, pero no dan XP: no se han hecho.
     for (const s of SHEETS) if (s.status !== 'pending' && s.unit <= top) completeLesson(s.id, false, true);
+    update(p => { p.placedChests = [...new Set([...(p.placedChests ?? []), ...Array.from({ length: top }, (_, i) => i + 1)])]; });
     go('inicio');
   }
   const top = <LessonTop progress={done ? 1 : k / STAGES.length} onClose={() => go('inicio')} right={!done ? <button className="skip-btn" onClick={() => setFailed(k)}>No lo sé</button> : undefined} />;
@@ -74,9 +75,9 @@ export function Placement() {
   }
   if (!ex) return <div className="empty-state"><Tesela mood="think" size={110} /><h2>Preparando…</h2></div>;
   return (
-    <ExerciseRunner key={ex.id} ex={ex} task="deduce" hints={false} xp={false} header={top} title={`Reto ${k + 1} de ${STAGES.length}`}
-      intro={`¿Lo ves? Es un ${sheetForTech(STAGES[k]).name.toLowerCase()}. Un fallo y la prueba termina aquí.`}
-      onWrong={() => window.setTimeout(() => setFailed(k), 1400)}
+    <ExerciseRunner key={ex.id} ex={ex} task="deduce" hints={false} reveal={false} xp={false} header={top} title={`Reto ${k + 1} de ${STAGES.length}`}
+      intro={`¿Lo ves? Es un ${sheetForTech(STAGES[k]).name.toLowerCase()}. Si fallas, la prueba termina aquí.`}
+      onWrong={() => setFailed(k)}
       onResult={r => { setRes(r.ok); if (!r.ok) { setFailed(k); sfx('partial'); } }}
       onNext={() => { if (res) { celebrate(); setK(k + 1); setRes(null); } }} nextLabel="Siguiente reto" />
   );

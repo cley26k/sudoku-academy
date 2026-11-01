@@ -60,7 +60,7 @@ export function Home() {
           const items = SHEETS.filter(s => s.unit === u.n && s.status !== 'pending');
           const pend = SHEETS.filter(s => s.unit === u.n && s.status === 'pending');
           const allDone = items.length > 0 && items.every(s => p.lessons[s.id]?.done);
-          const claimed = p.chests.includes(u.n);
+          const claimed = p.chests.includes(u.n) || !!p.placedChests?.includes(u.n);
           let row = 0;
           return (
             <div className={`unit c-${u.color}`} key={u.n}>
@@ -187,7 +187,7 @@ export function Library() {
   const p = useProgress();
   const [level, setLevel] = useState('Todos');
   const [q, setQ] = useState('');
-  const list = SHEETS.filter(s => (level === 'Todos' || s.level === level) && (q === '' || (s.name + s.aliases.join(' ')).toLowerCase().includes(q.toLowerCase())));
+  const list = SHEETS.filter(s => (level === 'Todos' || s.level === level) && (q === '' || (s.name + ' ' + (s.gloss ?? '') + ' ' + s.aliases.join(' ')).toLowerCase().includes(q.toLowerCase())));
   return (
     <div className="library">
       <div className="lib-head">
@@ -204,7 +204,7 @@ export function Library() {
           return (
             <button key={s.id} className={`lcard c-${unitColor(s)} k-${k}`} onClick={() => go(s.status === 'concept' ? `leccion-${s.id}` : `tecnica-${s.id}`)}>
               <Ring value={k === 'pending' ? 0 : m ? m.score : p.lessons[s.id]?.done ? 100 : 0} size={58} tone={k === 'mastered' ? 'green' : 'unit'}><span className="lc-abbr">{s.abbr}</span></Ring>
-              <span className="lc-txt"><b>{s.name}</b><small>{k === 'pending' ? 'Pronto' : m ? LEVEL_LABEL[m.level] : p.lessons[s.id]?.done ? 'Completada' : 'Sin empezar'}</small></span>
+              <span className="lc-txt"><b>{s.name}</b>{s.gloss && <small className="lc-gloss">{s.gloss}</small>}<small>{k === 'pending' ? 'Pronto' : m ? LEVEL_LABEL[m.level] : p.lessons[s.id]?.done ? 'Completada' : 'Sin empezar'}</small></span>
             </button>
           );
         })}
@@ -228,6 +228,7 @@ export function SheetPage({ sheet }: { sheet: Sheet }) {
         <div className="sh-txt">
           <span className="ub-n">{sheet.level}</span>
           <h1>{sheet.name}</h1>
+          {sheet.gloss && <p className="sh-gloss">{sheet.gloss}</p>}
           <p>{sheet.intuition}</p>
           {sheet.status !== 'pending' && (
             <div className="row-actions">
