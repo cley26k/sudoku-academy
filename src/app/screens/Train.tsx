@@ -7,7 +7,7 @@ import { ExerciseRunner, Task } from '../ui/ExerciseRunner';
 import { SudokuPlayer } from '../ui/SudokuPlayer';
 import { Btn, I, Icon, Segmented } from '../ui/common';
 import { Tesela } from '../ui/Tutor';
-import { recordAttempt, update } from '../store';
+import { recordAttempt, update, getProgress } from '../store';
 import { stateFromValues } from '../../engine/grid';
 import { go } from '../router';
 import { comboHit } from '../gamify';
@@ -16,7 +16,9 @@ interface Cfg { techs: TechId[]; task: Task; difficulty: 0 | 1 | 2 | 3; cands: b
 const CFG_KEY = 'sudoku-academy/train-cfg';
 function loadCfg(): Cfg {
   try { const c = JSON.parse(localStorage.getItem(CFG_KEY) || ''); if (c?.techs) return c; } catch { /* sin almacenamiento */ }
-  return { techs: ['x_wing'], task: 'deduce', difficulty: 0, cands: true, hints: true, length: 'short' };
+  const p = getProgress();
+  const learned = READY.filter(s => p.lessons[s.id]?.done && !p.lessons[s.id]?.placed).map(s => s.impl!);
+  return { techs: learned.length ? learned : ['naked_single', 'hidden_single'], task: 'deduce', difficulty: 0, cands: true, hints: true, length: 'short' };
 }
 
 export function Train({ preset, presetTechs }: { preset?: TechId; presetTechs?: TechId[] }) {

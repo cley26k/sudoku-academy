@@ -93,6 +93,7 @@ function App() {
   const openMistakes = p.mistakes.filter(m => !m.resolved).length;
   return (
     <div className={`shell${focus ? ' focus' : ''}`}>
+      <a className="skip-link" href="#main" onClick={e => { e.preventDefault(); document.getElementById('main')?.focus(); }}>Saltar al contenido</a>
       <ConfettiLayer />
       <ToastLayer />
       <MomentLayer paused={!(route === 'inicio' || route === 'progreso' || route === 'biblioteca' || route === 'tienda' || route === 'revision' || route === 'entrenar' || route === 'liga' || route.startsWith('tecnica-'))} />
@@ -123,7 +124,7 @@ function App() {
           </button>
         </nav>
       )}
-      <main className="main" id="main"><div className="page" key={route.split('-')[0]}><Screen route={route} /></div></main>
+      <main className="main" id="main" tabIndex={-1}><div className="page" key={route.split('-')[0]}><Screen route={route} /></div></main>
     </div>
   );
 }

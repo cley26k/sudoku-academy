@@ -115,7 +115,7 @@ export function Shop() {
               <div className="si-art">{it.slot ? <Tesela mood="idle" size={86} wear={{ [it.slot]: it.id }} /> : <span className="si-shield"><Icon d={I.shield} size={42} stroke={2.2} /><b>{p.freezes ?? 0}/2</b></span>}</div>
               <b>{it.name}</b>
               <small>{it.desc}</small>
-              {owned ? <Btn kind={on ? 'primary' : 'ghost'} onClick={() => { equip(it.id); sfx('select'); }}>{on ? 'Puesto' : 'Ponérselo'}</Btn>
+              {owned ? <>{on && <span className="si-on"><Icon d={I.check} size={14} stroke={3} /> Puesto</span>}<Btn kind={on ? 'ghost' : 'primary'} onClick={() => { equip(it.id); sfx('select'); }}>{on ? 'Quitar' : 'Ponérselo'}</Btn></>
                 : <Btn kind="primary" disabled={(p.gems ?? 0) < it.price} onClick={() => { const e = buy(it.id); setMsg(e); if (!e) sfx('chest'); }}><Icon d={I.gem} size={16} stroke={2.6} /> {it.price}</Btn>}
             </div>
           );

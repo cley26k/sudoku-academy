@@ -32,10 +32,12 @@ export function ConfirmSheet({ title, text, stay, leave, onStay, onLeave }: { ti
 /** Barra superior de lección. Con `confirm`, salir pide confirmación para no perder el progreso por error. */
 export function LessonTop({ progress, onClose, right, confirm }: { progress: number; onClose: () => void; right?: React.ReactNode; confirm?: string }) {
   const [ask, setAsk] = useState(false);
+  const xRef = useRef<HTMLButtonElement>(null);
+  const stay = () => { setAsk(false); requestAnimationFrame(() => xRef.current?.focus()); };
   return (
     <div className="ltop">
-      <button className="ltop-x" onClick={() => (confirm ? setAsk(true) : onClose())} aria-label="Salir"><Icon d={I.x} size={24} stroke={2.6} /></button>
-      {ask && confirm && <ConfirmSheet title="¿Salir de la lección?" text={confirm} stay="Seguir aprendiendo" leave="Salir" onStay={() => setAsk(false)} onLeave={onClose} />}
+      <button ref={xRef} className="ltop-x" onClick={() => (confirm ? setAsk(true) : onClose())} aria-label="Salir"><Icon d={I.x} size={24} stroke={2.6} /></button>
+      {ask && confirm && <ConfirmSheet title="¿Salir de la lección?" text={confirm} stay="Seguir aprendiendo" leave="Salir" onStay={stay} onLeave={onClose} />}
       <div className="lprog" role="progressbar" aria-valuenow={Math.round(progress * 100)} aria-valuemin={0} aria-valuemax={100}>
         <span style={{ width: `${Math.max(4, progress * 100)}%` }}><i /></span>
       </div>
